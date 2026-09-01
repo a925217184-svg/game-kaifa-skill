@@ -27,6 +27,11 @@ import numpy as np
 from PIL import Image
 
 MAGENTA = np.array([255, 0, 255], dtype=np.float32)
+GREEN = np.array([0, 255, 0], dtype=np.float32)
+
+
+def _key_target(key_color: str) -> np.ndarray:
+    return GREEN if key_color == "green" else MAGENTA
 
 
 def _ensure_dir(path: Path) -> Path:
@@ -86,25 +91,28 @@ def extract_frames(video: Path, out_dir: Path, fps: float = 0.0) -> list[Path]:
     return frames
 
 
-def _near_magenta_mask(rgb: np.ndarray, dist: float = 55.0) -> np.ndarray:
-    """rgb: HxWx3 uint8 → bool mask of keyable magenta-ish pixels."""
+def _near_key_mask(rgb: np.ndarray, key_color: str = "magenta", dist: float = 55.0) -> np.ndarray:
+    """rgb: HxWx3 uint8 → bool mask of keyable (background) pixels for the chosen key color."""
     f = rgb.astype(np.float32)
-    # Distance to pure magenta in RGB.
-    d = np.linalg.norm(f - MAGENTA, axis=2)
-    # Also catch bright pinks: high R+B, low G relative.
+    target = _key_target(key_color)
+    d = np.linalg.norm(f - target, axis=2)
     r, g, b = f[:, :, 0], f[:, :, 1], f[:, :, 2]
-    pinkish = (r > 160) & (b > 160) & (g < 140) & ((r + b) / 2 - g > 40)
-    return (d <= dist) | pinkish
+    if key_color == "green":
+        # bright green: high G, low R/B, G - max(R,B) large
+        extra = (g > 160) & (r < 140) & (b < 140) & ((g - np.maximum(r, b)) > 40)
+    else:
+        # magenta / bright pink: high R+B, low G relative
+        extra = (r > 160) & (b > 160) & (g < 140) & ((r + b) / 2 - g > 40)
+    return (d <= dist) | extra
 
 
-def chroma_key_rgba(im: Image.Image, dist: float = 55.0) -> Image.Image:
-    """Flood-fill magenta from corners, despill edges, return RGBA."""
+def chroma_key_rgba(im: Image.Image, dist: float = 55.0, key_color: str = "magenta") -> Image.Image:
+    """Flood-fill the key color (magenta or green) from corners, despill edges, return RGBA."""
     rgba = im.convert("RGBA")
     arr = np.array(rgba)
     rgb = arr[:, :, :3]
-    alpha = arr[:, :, 3].astype(np.uint8)
     h, w = rgb.shape[:2]
-    key = _near_magenta_mask(rgb, dist=dist)
+    key = _near_key_mask(rgb, key_color=key_color, dist=dist)
 
     visited = np.zeros((h, w), dtype=bool)
     q: deque[tuple[int, int]] = deque()
@@ -112,7 +120,7 @@ def chroma_key_rgba(im: Image.Image, dist: float = 55.0) -> Image.Image:
         if key[y, x]:
             visited[y, x] = True
             q.append((x, y))
-    # Also seed along edges where magenta is present.
+    # Also seed along edges where key color is present.
     for x in range(w):
         for y in (0, h - 1):
             if key[y, x] and not visited[y, x]:
@@ -134,23 +142,104 @@ def chroma_key_rgba(im: Image.Image, dist: float = 55.0) -> Image.Image:
     out = arr.copy()
     out[visited, 3] = 0
 
-    # Light despill on remaining near-magenta fringe (keep RGB, reduce alpha).
+    # Light despill on remaining near-key fringe (keep RGB, reduce alpha).
     fringe = key & ~visited
     if fringe.any():
-        # Pull toward less magenta and soften alpha.
         fr = out[fringe].astype(np.float32)
         r, g, b, a = fr[:, 0], fr[:, 1], fr[:, 2], fr[:, 3]
-        spill = np.maximum(0.0, (r + b) / 2.0 - g)
-        factor = np.clip(1.0 - spill / 180.0, 0.15, 1.0)
-        fr[:, 0] = np.clip(r - spill * 0.35, 0, 255)
-        fr[:, 2] = np.clip(b - spill * 0.35, 0, 255)
-        fr[:, 1] = np.clip(g + spill * 0.15, 0, 255)
+        if key_color == "green":
+            spill = np.maximum(0.0, g - np.maximum(r, b))
+            factor = np.clip(1.0 - spill / 180.0, 0.15, 1.0)
+            fr[:, 1] = np.clip(g - spill * 0.35, 0, 255)
+            fr[:, 0] = np.clip(r + spill * 0.15, 0, 255)
+            fr[:, 2] = np.clip(b + spill * 0.15, 0, 255)
+        else:
+            spill = np.maximum(0.0, (r + b) / 2.0 - g)
+            factor = np.clip(1.0 - spill / 180.0, 0.15, 1.0)
+            fr[:, 0] = np.clip(r - spill * 0.35, 0, 255)
+            fr[:, 2] = np.clip(b - spill * 0.35, 0, 255)
+            fr[:, 1] = np.clip(g + spill * 0.15, 0, 255)
         fr[:, 3] = np.clip(a * factor, 0, 255)
         out[fringe] = fr.astype(np.uint8)
 
     # Fully transparent where alpha is 0.
     out[out[:, :, 3] == 0, :3] = 0
     return Image.fromarray(out, "RGBA")
+
+
+def _subject_mask(arr: np.ndarray, alpha_min: int = 32) -> np.ndarray:
+    """Estimate the subject (foreground) mask from an RGBA image.
+
+    If the image already has meaningful transparency, the subject is the
+    non-transparent region. Otherwise we treat the dominant corner color as
+    background and everything far from it as subject.
+    """
+    alpha = arr[:, :, 3]
+    if alpha.max() > alpha_min and alpha.mean() < 250:
+        return alpha > alpha_min
+    h, w, _ = arr.shape
+    corners = np.concatenate(
+        [arr[:20, :20], arr[:20, -20:], arr[-20:, :20], arr[-20:, -20:]]
+    ).reshape(-1, 4)
+    cb = corners[:, :3]
+    uniq, counts = np.unique(cb.astype(int), axis=0, return_counts=True)
+    bg = uniq[np.argmax(counts)][:3].astype(np.float32)
+    d = np.linalg.norm(arr[:, :, :3].astype(np.float32) - bg, axis=2)
+    return d > 40
+
+
+def _in_warm_family(r: np.ndarray, g: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Boolean mask of red / magenta / pink / purple subject pixels.
+
+    These are the colors that collide with a magenta (#FF00FF) screen and would
+    be partially eaten during keying, so the subject should go on green instead.
+    Pure/sky blue is intentionally excluded (high blue, low red).
+    """
+    r = r.astype(np.float32)
+    g = g.astype(np.float32)
+    b = b.astype(np.float32)
+    magenta_pink = (r > 120) & (b > 120) & (g < np.minimum(r, b) - 15)
+    red = (r >= g) & (r >= b) & (r - g > 50) & (r - b > 50)
+    purple = (b >= r) & (b > g) & (r > g) & (r > 70)
+    return magenta_pink | red | purple
+
+
+def subject_key_risk(
+    im: Image.Image, key_color: str = "magenta", dist: float = 55.0, alpha_min: int = 32
+) -> float:
+    """Fraction of subject pixels in the red/magenta/pink/purple family.
+
+    Returns 0..1. High value → the subject would be damaged by magenta keying,
+    so use green (#00FF00) screen instead.
+    """
+    arr = np.array(im.convert("RGBA"))
+    subj = _subject_mask(arr, alpha_min=alpha_min)
+    if subj.sum() == 0:
+        return 0.0
+    rgb = arr[:, :, :3]
+    warm = _in_warm_family(rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]) & subj
+    return float(warm.sum() / subj.sum())
+
+
+def classify_key_color(im: Image.Image, dist: float = 55.0, threshold: float = 0.04) -> str:
+    """Pick magenta (default) unless the subject carries red/magenta/purple
+    colors that would be keyed out → then fall back to green screen."""
+    risk = subject_key_risk(im, key_color="magenta", dist=dist)
+    return "green" if risk > threshold else "magenta"
+
+
+def detect_bg_key(rgb: np.ndarray) -> str:
+    """From raw video frames (still containing the background), detect whether
+    the clip was shot on magenta or green screen by inspecting corner pixels."""
+    h, w, _ = rgb.shape
+    corners = np.concatenate(
+        [rgb[:15, :15], rgb[:15, -15:], rgb[-15:, :15], rgb[-15:, -15:]]
+    ).reshape(-1, 3).astype(np.float32)
+    mean = corners.mean(0)
+    g, r, b = mean[1], mean[0], mean[2]
+    if g > r + 30 and g > b + 30:
+        return "green"
+    return "magenta"
 
 
 def content_bbox(im: Image.Image, alpha_min: int = 32) -> tuple[int, int, int, int] | None:
@@ -207,6 +296,7 @@ def clean_frames(
     raw_dir: Path,
     clean_dir: Path,
     dist: float = 55.0,
+    key_color: str = "magenta",
 ) -> list[Path]:
     _ensure_dir(clean_dir)
     raws = sorted(raw_dir.glob("frame_*.png"))
@@ -215,12 +305,12 @@ def clean_frames(
     outs: list[Path] = []
     for i, path in enumerate(raws):
         im = Image.open(path)
-        cleaned = chroma_key_rgba(im, dist=dist)
+        cleaned = chroma_key_rgba(im, dist=dist, key_color=key_color)
         out = clean_dir / f"clean_{i:04d}.png"
         cleaned.save(out)
         outs.append(out)
         if (i + 1) % 25 == 0 or i + 1 == len(raws):
-            print(f"  cleaned {i + 1}/{len(raws)}")
+            print(f"  cleaned {i + 1}/{len(raws)} [{key_color}]")
     return outs
 
 
@@ -369,8 +459,27 @@ def cmd_extract(args: argparse.Namespace) -> int:
 
 
 def cmd_clean(args: argparse.Namespace) -> int:
-    outs = clean_frames(Path(args.raw_dir), Path(args.out_dir), dist=args.dist)
-    print(f"cleaned {len(outs)} frames → {args.out_dir}")
+    key_color = args.key_color
+    if key_color == "auto":
+        # auto from first raw frame corners
+        first = sorted(Path(args.raw_dir).glob("frame_*.png"))
+        if first:
+            rgb = np.array(Image.open(first[0]).convert("RGB"))
+            key_color = detect_bg_key(rgb)
+        else:
+            key_color = "magenta"
+    outs = clean_frames(Path(args.raw_dir), Path(args.out_dir), dist=args.dist, key_color=key_color)
+    print(f"cleaned {len(outs)} frames → {args.out_dir} [key={key_color}]")
+    return 0
+
+
+def cmd_keycheck(args: argparse.Namespace) -> int:
+    im = Image.open(args.image).convert("RGBA")
+    risk = subject_key_risk(im, key_color="magenta", dist=args.dist)
+    recommended = "green" if risk > args.threshold else "magenta"
+    print(f"image: {args.image}")
+    print(f"subject magenta-key risk: {risk:.3f}  threshold: {args.threshold}")
+    print(f"recommended key color: {recommended}")
     return 0
 
 
@@ -405,10 +514,19 @@ def cmd_process(args: argparse.Namespace) -> int:
     if not video.is_file():
         raise FileNotFoundError(video)
 
+    key_color = args.key_color
+    if key_color == "auto":
+        # will detect after extraction; peek first raw frame
+        pass
+
     print(f"extract {video}")
     frames = extract_frames(video, raw_dir, fps=args.fps)
-    print(f"clean {len(frames)} frames")
-    clean_frames(raw_dir, clean_dir, dist=args.dist)
+    if key_color == "auto":
+        rgb0 = np.array(Image.open(frames[0]).convert("RGB"))
+        key_color = detect_bg_key(rgb0)
+        print(f"auto-detected background key color: {key_color}")
+    print(f"clean {len(frames)} frames [key={key_color}]")
+    clean_frames(raw_dir, clean_dir, dist=args.dist, key_color=key_color)
     counts = _parse_counts(args.frame_counts)
     print(f"sample counts={counts}")
     meta_sample = sample_and_export(
@@ -428,6 +546,7 @@ def cmd_process(args: argparse.Namespace) -> int:
         "out_dir": str(out.resolve()),
         "raw_frames": len(frames),
         "chroma_dist": args.dist,
+        "key_color": key_color,
         "cell_size": args.cell_size,
         "body_height": args.body_height,
         "foot_y": args.foot_y,
@@ -461,7 +580,22 @@ def build_parser() -> argparse.ArgumentParser:
     pc.add_argument("--raw-dir", required=True)
     pc.add_argument("--out-dir", required=True)
     pc.add_argument("--dist", type=float, default=55.0)
+    pc.add_argument(
+        "--key-color",
+        choices=("magenta", "green", "auto"),
+        default="magenta",
+        help="magenta (#FF00FF) default; green (#00FF00) if subject has red/magenta/purple; auto detects from raw frame corners",
+    )
     pc.set_defaults(func=cmd_clean)
+
+    pk = sub.add_parser(
+        "keycheck",
+        help="check a subject image for red/magenta/purple and recommend magenta or green screen",
+    )
+    pk.add_argument("--image", required=True)
+    pk.add_argument("--dist", type=float, default=55.0)
+    pk.add_argument("--threshold", type=float, default=0.04)
+    pk.set_defaults(func=cmd_keycheck)
 
     ps = sub.add_parser("sample", help="sample cleaned frames into sprite sets")
     ps.add_argument("--clean-dir", required=True)
@@ -475,6 +609,12 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--name", default="clip")
     pp.add_argument("--fps", type=float, default=0.0)
     pp.add_argument("--dist", type=float, default=55.0)
+    pp.add_argument(
+        "--key-color",
+        choices=("magenta", "green", "auto"),
+        default="auto",
+        help="auto detects magenta/green from the raw video; can also force magenta or green",
+    )
     add_common_sample(pp)
     pp.set_defaults(func=cmd_process)
 

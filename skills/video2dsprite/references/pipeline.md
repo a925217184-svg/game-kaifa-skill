@@ -47,10 +47,15 @@ If ffmpeg is missing, fail with a clear install message. Do not invent frames.
 
 ## Chroma key
 
-1. Treat near-magenta pixels as key candidates (hue distance + high magenta channel).
-2. Flood-fill from image corners so interior magenta-ish costume bits are less likely to vanish.
-3. Despill residual pink fringes toward neutral/transparent.
-4. Write RGBA PNGs.
+1. **Key color decision (Step 0B):** run `python video2dsprite.py keycheck --image <subject>`.
+   - `recommended magenta` → use `#FF00FF` screen (default).
+   - `recommended green` → the subject carries red/magenta/pink/purple, so use `#00FF00` green screen instead.
+2. Treat near-key pixels as key candidates (distance to the chosen key color + channel boost: magenta = high R+B/low G; green = high G/low R,B).
+3. Flood-fill from image corners so interior key-colored costume bits (e.g. a magenta scarf on a magenta screen) are less likely to vanish.
+4. Despill residual fringes toward neutral/transparent along the correct axis (magenta → pull R+B; green → pull G).
+5. Write RGBA PNGs.
+
+The `process` / `clean` commands accept `--key-color magenta|green|auto`; `auto` detects from the raw frame corners.
 
 ## Sampling
 

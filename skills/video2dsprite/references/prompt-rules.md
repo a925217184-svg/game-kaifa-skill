@@ -4,13 +4,13 @@
 
 Required:
 
-- Solid flat background `#FF00FF` (pure magenta), no gradient, no floor shadow if possible
+- **Solid flat background** in the key color decided in Step 0B: **`#FF00FF` (magenta, default)** or **`#00FF00` (green)** when `keycheck` flags the subject as red/magenta/pink/purple. No gradient, no floor shadow if possible.
 - Full body, centered, generous margin on all sides
 - Side or 3/4-side view for run/walk
 - Same scale and costume the game already uses when a reference exists
 - No text, UI, watermark, speech bubbles, second character
 
-Good base pattern:
+Good base pattern (magenta):
 
 ```text
 Side-view full-body 2D game sprite of <subject>, <style>, standing ready pose,
@@ -18,7 +18,7 @@ facing right, centered in frame, feet near lower third, solid flat magenta
 background #FF00FF only, no ground, no shadow, no text, crisp readable silhouette.
 ```
 
-If matching a project sprite: use `image_edit` with the existing frame as reference and only change pose/background to magenta if needed. Prefer compositing a known good frame onto magenta in code when the art already exists.
+If matching a project sprite: use `image_edit` with the existing frame as reference and only change pose/background to the key color if needed. Prefer compositing a known good frame onto the key color in code when the art already exists.
 
 ## Video (`image_to_video`)
 
@@ -28,7 +28,7 @@ Write **one short present-tense shot** (1–2 sentences). Constraints:
 | --- | --- |
 | Run/walk **in place** (treadmill) | Travel across the screen |
 | Locked camera | Pan, zoom, orbit, handheld |
-| Keep solid magenta background | Scenic BG, ground scroll, particles filling frame |
+| Keep solid key-color background (the Step 0B color) | Scenic BG, ground scroll, particles filling frame |
 | Single continuous action | Combo attacks + movement + camera |
 | Stable identity/clothes | Costume change mid-clip |
 

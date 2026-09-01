@@ -19,11 +19,13 @@
 - 本地后处理脚本（generate2dsprite.py / make_anchor_layout / make_layout_guide）不变
 
 ### 3. `video2dsprite`（视频 → 精灵，改动最大）
-- 移除 “Grok Build only” 限制
+- 移除 "Grok Build only" 限制
 - 视频生成：由 Grok `image_to_video` → **即梦 Dreamina CLI 的 `image2video` / `multiframe2video`**
 - Base still：由 Grok `image_gen`/`image_edit` → **Lovart 或 `dreamina text2image` / `dreamina image2image`**
 - 新增 Dreamina CLI 前置条件检查（安装 / 登录 / 余额）与费用告知规则
 - 本地后处理管线（ffmpeg 抽帧 → 洋红 chroma key → 采样归一化）完全不变
+- **（本次更新）Step 0 交互式生成方式选择**：运行前先询问用户用「首尾帧模式」（`frames2video`，首 / 尾帧需用户确认路径；循环动画时首帧 = 尾帧同图）还是「全能模式」（`image2video` / `multimodal2video`，参考图驱动），并从模型表选即梦模型（默认 `seedance2.0_vip` 720p 6s）。
+- **（本次更新）暖色自动绿幕 `keycheck`**：品红抠像前先检测角色 / 物体是否含红 / 品红 / 紫等暖色；含则改用绿幕 `#00FF00`，否则保持品红 `#FF00FF`。脚本新增 `keycheck` 子命令，`chroma_key_rgba` 支持 `--key-color magenta|green|auto`（`auto` 从原始帧四角自动识别）。实测猫猫村手动猫：黑 / 白猫因粉脸颊 / 鼻 → 绿幕，蓝猫 → 品红。
 
 ### 费用告知示例
 > 📸 **即将生图** | 后端: **Lovart** (mode: **fast**, 扣信用点) | 内容: [一句话描述] | 预计: ~N 次生成
@@ -187,9 +189,9 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | --- | --- | --- | --- |
 | [`generate2dsprite`](./skills/generate2dsprite) | Sprites、animation sheets、props、spell bundles、FX、参考图变体、固定 frame sheet 的 layout guide | raw sheet、cleaned transparent sheet、frames、GIFs、metadata | Codex / Grok |
 | [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata | Codex / Grok |
-| [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image_to_video` → 抽帧 → 品红抠图 → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | **仅 Grok Build** |
+| [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image2video`/`frames2video` → 抽帧 → 品红/绿幕抠图（暖色自动绿幕） → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | 即梦 Dreamina CLI |
 
-> **`$video2dsprite` 仅 Grok Build 可用**（需要 `image_to_video`）。安装到 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
+> **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 
 `$generate2dmap` 只有在地图流程需要可复用透明 props 时，才会搭配 `$generate2dsprite`。小型环境 props 可以批成 `2x2`、`3x3` 或 `4x4` prop packs，再切成独立透明 props。平台、地板、桥、墙、门和长条 hazard 这类碰撞关键物件，通常应该单独生成或用 tile/object layer 表达。
 

@@ -167,6 +167,54 @@ def chroma_key_rgba(im: Image.Image, dist: float = 55.0, key_color: str = "magen
     return Image.fromarray(out, "RGBA")
 
 
+def robust_key_rgba(im: Image.Image, dist: float = 55.0, corner_size: int = 15) -> Image.Image:
+    """Flood-remove the actual background color sampled from corners.
+
+    Handles clean green/magenta screens and also the desaturated mid-tones
+    some generators (e.g. Dreamina) introduce when transitioning between two
+    key colors. The subject is preserved because flood-fill only walks
+    connected background pixels.
+    """
+    rgba = im.convert("RGBA")
+    arr = np.array(rgba)
+    rgb = arr[:, :, :3].astype(np.float32)
+    h, w = rgb.shape[:2]
+    cs = corner_size
+    corners = np.concatenate(
+        [rgb[:cs, :cs], rgb[:cs, -cs:], rgb[-cs:, :cs], rgb[-cs:, -cs:]]
+    ).reshape(-1, 3)
+    bg = corners.mean(0)
+    bg_std = corners.std(0).mean()
+
+    d_m = np.linalg.norm(rgb - np.array([255, 0, 255]), axis=2)
+    d_g = np.linalg.norm(rgb - np.array([0, 255, 0]), axis=2)
+    d_bg = np.linalg.norm(rgb - bg, axis=2)
+    # adaptive but clamped: uniform bgs still bridge anti-aliased edges
+    bg_thresh = max(42, bg_std * 4 + 22)
+    key = (d_m <= dist) | (d_g <= dist) | (d_bg <= bg_thresh)
+
+    visited = np.zeros((h, w), dtype=bool)
+    q: deque[tuple[int, int]] = deque()
+    for y, x in ((0, 0), (0, w - 1), (h - 1, 0), (h - 1, w - 1)):
+        if key[y, x]:
+            visited[y, x] = True
+            q.append((x, y))
+    while q:
+        x, y = q.popleft()
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if 0 <= nx < w and 0 <= ny < h and not visited[ny, nx] and key[ny, nx]:
+                visited[ny, nx] = True
+                q.append((nx, ny))
+
+    out = arr.copy()
+    out[visited, 3] = 0
+    fringe = (~visited) & (d_bg <= bg_thresh + 18)
+    if fringe.any():
+        out[fringe, 3] = (out[fringe, 3] * 0.35).astype(np.uint8)
+    out[out[:, :, 3] == 0, :3] = 0
+    return Image.fromarray(out, "RGBA")
+
+
 def _subject_mask(arr: np.ndarray, alpha_min: int = 32) -> np.ndarray:
     """Estimate the subject (foreground) mask from an RGBA image.
 

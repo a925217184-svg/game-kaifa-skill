@@ -154,6 +154,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`generate2dsprite`](./skills/generate2dsprite) | sprites、animation sheets、props、spell bundles、FX、reference variants、fixed-frame sheets 用 layout guides | raw sheet、cleaned transparent sheet、frames、GIFs、metadata | Codex / Grok |
 | [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata | Codex / Grok |
 | [`video2dsprite`](./skills/video2dsprite) | **動画からの密なモーション sprite**：静止画 → `image_to_video` → フレーム抽出 → マゼンタ chroma → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | **Grok Build 専用** |
+| [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **順序透明フレーム → 正方形アトラス + 標準 Cocos2d plist**：N×N グリッド梱包（4×4=16 / 8×8=64）→ `.atlas` → Free Texture Packer の Cocos2d テンプレート厳密準拠 `.plist`（format=2、RGBA8888、premultiplyAlpha、rect 無空白） | 正方形透明アトラス PNG、`.atlas`、フレーム別 `frames/`、再生 GIF、`cat_*.plist` | Python + Pillow（ローカル完結、生成バックエンド不要） |
 
 > **`$video2dsprite` は Grok Build 専用**（`image_to_video` が必要）。`~/.grok/skills` にインストール。硬い pixel の本番 sheet は `$generate2dsprite` を優先。
 

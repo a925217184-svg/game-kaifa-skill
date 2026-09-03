@@ -28,6 +28,11 @@
 - **（本次更新）暖色自动绿幕 `keycheck`**：品红抠像前先检测角色 / 物体是否含红 / 品红 / 紫等暖色；含则改用绿幕 `#00FF00`，否则保持品红 `#FF00FF`。脚本新增 `keycheck` 子命令，`chroma_key_rgba` 支持 `--key-color magenta|green|auto`（`auto` 从原始帧四角自动识别）。实测猫猫村手动猫：黑 / 白猫因粉脸颊 / 鼻 → 绿幕，蓝猫 → 品红。
 - **（本次更新）新增 `robust_key_rgba` 鲁棒抠像**：处理 Dreamina 首尾帧 / image2video 输出中背景色不统一、或在品红 ↔ 绿幕过渡中出现 desaturated 粉紫/灰调的问题。该函数从每帧四角采样实际背景色，同时 key 纯品红、纯绿、及四角颜色，再洪泛填充连通背景并柔化边缘，避免固定 key 漏底。在猫猫村白猫 sleep→lift 序列中清除了中间帧的粉紫残留。
 
+### 4. `cocos2d-atlas-builder`（图集打包 + 标准 Cocos2d plist，新增）
+- 新增纯本地技能（Python + Pillow，无生图后端）：把**有序透明 PNG 帧**打包成方形透明图集（N×N 网格，4×4=16 / 8×8=64 帧），并生成**严格对齐 Free Texture Packer Cocos2d 模板**的 `.plist`。
+- plist 模板要点（实测可导入 Cocos Creator）：DOCTYPE `-//Apple Computer//DTD PLIST 1.0//EN`、`format=2`、`pixelFormat=RGBA8888`、`premultiplyAlpha`、2 空格缩进、rect 字符串无空格（`{{0,0},{256,256}}`）。详见 `skills/cocos2d-atlas-builder/references/cocos2d_plist_spec.md`。
+- 含脚本 `build_atlas.py` / `gen_plist.py` / `make_preview_gif.py` 与 `tests/test_cocos2d_atlas_builder.py`。
+
 ### 费用告知示例
 > 📸 **即将生图** | 后端: **Lovart** (mode: **fast**, 扣信用点) | 内容: [一句话描述] | 预计: ~N 次生成
 
@@ -191,6 +196,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`generate2dsprite`](./skills/generate2dsprite) | Sprites、animation sheets、props、spell bundles、FX、参考图变体、固定 frame sheet 的 layout guide | raw sheet、cleaned transparent sheet、frames、GIFs、metadata | Codex / Grok |
 | [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata | Codex / Grok |
 | [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image2video`/`frames2video` → 抽帧 → 品红/绿幕抠图（暖色自动绿幕） → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | 即梦 Dreamina CLI |
+| [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明帧 → 方形图集 + 标准 Cocos2d plist**：N×N 网格打包（4×4=16 / 8×8=64）→ `.atlas` → 严格对齐 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，无空格 rect） | 方形透明图集 PNG、`.atlas`、逐帧 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（纯本地，无生图后端） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 

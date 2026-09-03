@@ -154,6 +154,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`generate2dsprite`](./skills/generate2dsprite) | sprites, animation sheets, props, spell bundles, FX, reference variants, fixed-frame sheets용 layout guides | raw sheet, cleaned transparent sheet, frames, GIFs, metadata | Codex / Grok |
 | [`generate2dmap`](./skills/generate2dmap) | baked maps, layered raster maps, clean HD RPG maps, prop packs, collision/zones, Godot-editable scenes, side-scroll/parallax scenes | base map, dressed/stage reference, prop pack, extracted props, preview, scene metadata | Codex / Grok |
 | [`video2dsprite`](./skills/video2dsprite) | **영상 기반 고밀도 모션 sprite**: still → `image_to_video` → 프레임 추출 → magenta chroma → multi-density strip/GIF | video, frames, 8/16/24/48 sprites | **Grok Build 전용** |
+| [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **정렬된 투명 프레임 → 정방형 아틀라스 + 표준 Cocos2d plist**: N×N 격자 묶음(4×4=16 / 8×8=64) → `.atlas` → Free Texture Packer Cocos2d 템플릿 엄격 준수 `.plist`(format=2, RGBA8888, premultiplyAlpha, rect 공백 없음) | 정방형 투명 아틀라스 PNG, `.atlas`, 프레임별 `frames/`, 재생 GIF, `cat_*.plist` | Python + Pillow(로컬 전용, 생성 백엔드 불필요) |
 
 > **`$video2dsprite`는 Grok Build 전용**입니다 (`image_to_video` 필요). `~/.grok/skills`에 설치하세요. 선명한 픽셀 프로덕션 sheet는 `$generate2dsprite`를 우선하세요.
 

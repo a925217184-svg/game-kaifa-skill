@@ -387,6 +387,7 @@ Use $generate2dsprite to create a 2D game similar to Pokemon. You only need to b
 | [`generate2dsprite`](./skills/generate2dsprite) | Sprites、animation sheets、props、spell bundles、FX、reference variants、固定 frame sheet 可選 layout guides | Raw sheet、cleaned transparent sheet、frames、GIFs、metadata | Codex / Grok（需 image gen） |
 | [`generate2dmap`](./skills/generate2dmap) | Baked maps、layered raster maps、clean HD RPG maps、prop packs、collision / zones、Godot-editable scenes | Base map、dressed reference、prop pack、extracted props、preview、scene metadata | Codex / Grok（需 image gen） |
 | [`video2dsprite`](./skills/video2dsprite) | **用影片做更密的動作 sprite**：靜止圖 → `image_to_video` → 抽幀 → 洋紅去背 → 多密度 strip / GIF | 影片、raw/clean 幀、8/16/24/48 sprite、strip、預覽 GIF | **僅 Grok Build** |
+| [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明幀 → 方形圖集 + 標準 Cocos2d plist**：N×N 網格打包（4×4=16 / 8×8=64）→ `.atlas` → 嚴格對齊 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，rect 無空格） | 方形透明圖集 PNG、`.atlas`、逐幀 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（純本地，無生圖後端） |
 
 ### 僅 Grok Build：`$video2dsprite`
 

@@ -39,20 +39,34 @@ python scripts/build_atlas.py \
   --grid 4 \            # 4 -> 4×4 = 16 frames; use 8 -> 8×8 = 64
   --cell 256 \          # each frame resized to 256×256
   --defringe-green      # optional: knock out leftover green-screen fringe
+  --key-black           # optional: make near-black background transparent (border flood fill)
+  --no-frames           # optional: skip the frames/ subfolder (atlas + .atlas only)
+  --no-preview          # optional: skip the preview_<name>.png grid sheet
 ```
 
 Outputs in `--out`:
 - `cat_pink.png` — square transparent atlas (grid×cell px).
 - `cat_pink.atlas` — libGDX-style frame map (consumed by Step 2).
-- `frames/` — individual resized frames (use for the preview GIF).
-- `preview_cat_pink.png` — grid preview with frame indices.
+- `frames/` — individual resized frames (use for the preview GIF). Only when
+  `--no-frames` is NOT given.
+- `preview_cat_pink.png` — grid preview with frame indices. Only when
+  `--no-preview` is NOT given.
 
 Behavior notes:
 - Frame count is forced to `grid×grid`. First source frame = atlas frame 0, last
   source frame = atlas last frame (forced unless `--no-keep-ends`). Middle frames
   are uniformly sampled in playback order so the loop is smooth.
+- When the source has **fewer** frames than the target grid (e.g. 61 source frames
+  for an 8×8 = 64 atlas), frames are interpolated with duplicates allowed so the
+  atlas still emits exactly `grid×grid` frames; first/last are still forced to the
+  true first/last source keyframes.
 - Every frame is LANCZOS-resized to `--cell`, preserving relative position → no
   jump between frames.
+- `--key-black` makes a near-black (RGB `< 40`) background transparent via a
+  border-connected flood fill, so genuinely dark parts of the subject stay opaque.
+  Use it for sprites shot on a solid black backdrop.
+- `--src` and `--out` may be the same folder. A pre-existing atlas PNG/atlas with
+  the same `--name` is ignored on re-runs (re-run safe).
 - Atlas background is fully transparent (RGBA alpha = 0).
 
 ### Step 2 — Generate the Cocos2d plist

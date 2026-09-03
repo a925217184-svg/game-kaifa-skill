@@ -41,13 +41,56 @@ def defringe_green(im: Image.Image) -> Image.Image:
     return Image.fromarray(a, "RGBA")
 
 
+def key_black_bg(im: Image.Image, thr: int = 40) -> Image.Image:
+    """Make a near-black background transparent.
+
+    Dark pixels are only treated as background when they are connected to the
+    image border, so genuinely dark parts of the subject (hair, eyes, shoes)
+    stay opaque. Uses a border-seeded flood fill (no extra deps).
+    """
+    from collections import deque
+    a = np.array(im.convert("RGBA"))
+    h, w = a.shape[:2]
+    lum = a[:, :, :3].max(axis=2)
+    dark = lum < thr
+    mask = np.zeros((h, w), dtype=bool)
+    q = deque()
+    for x in range(w):
+        for y in (0, h - 1):
+            if dark[y, x]:
+                mask[y, x] = True
+                q.append((y, x))
+    for y in range(h):
+        for x in (0, w - 1):
+            if dark[y, x] and not mask[y, x]:
+                mask[y, x] = True
+                q.append((y, x))
+    while q:
+        y, x = q.popleft()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not mask[ny, nx] and dark[ny, nx]:
+                mask[ny, nx] = True
+                q.append((ny, nx))
+    a[mask, 3] = 0
+    return Image.fromarray(a, "RGBA")
+
+
 def sample_indexes(N, grid, keep_ends=True):
     """Pick grid*grid frame indices in playback order.
-    keep_ends forces first frame=0 and last frame=N-1."""
+    keep_ends forces first frame=0 and last frame=N-1.
+
+    When the source has FEWER frames than the target grid (N <= total), we
+    interpolate across the source with `total` samples (duplicates allowed) and
+    force the two ends, so we still emit exactly `total` frames and the loop
+    still keeps the first/last keyframes.
+    """
     total = grid * grid
-    if N <= total:
-        return list(range(N))
     if keep_ends:
+        if N <= total:
+            idx = [int(round(x)) for x in np.linspace(0, N - 1, total)]
+            idx[0], idx[-1] = 0, N - 1
+            return idx
         interior = sorted(set(int(round(x)) for x in np.linspace(1, N - 2, total - 2)))
         while len(interior) < total - 2:  # rare rounding collisions -> backfill
             for x in range(1, N - 1):
@@ -56,10 +99,11 @@ def sample_indexes(N, grid, keep_ends=True):
                     break
             interior = sorted(interior)
         return [0] + interior + [N - 1]
-    return list(range(total))
+    # keep_ends=False: sample `total` indices evenly across the source
+    return [int(round(x)) for x in np.linspace(0, N - 1, total)]
 
 
-def build_atlas(name, frames, out_dir, grid, cell):
+def build_atlas(name, frames, out_dir, grid, cell, make_frames=True, make_preview=True):
     n = len(frames)
     assert n == grid * grid, f"{name}: need {grid * grid} frames, got {n}"
     w = h = grid * cell
@@ -82,12 +126,18 @@ def build_atlas(name, frames, out_dir, grid, cell):
                   "  offset: 0, 0", "  index: -1", ""]
     (out_dir / f"{name}.atlas").write_text("\n".join(lines), encoding="utf-8")
 
-    fdir = out_dir / "frames"
-    if fdir.exists():
-        fdir.rename(out_dir / f"frames_bak_{int(time.time())}")
-    fdir.mkdir(exist_ok=True)
-    for i, fr in enumerate(frames):
-        fr.save(fdir / f"{name}_{i:04d}.png")
+    if make_frames:
+        fdir = out_dir / "frames"
+        if fdir.exists():
+            fdir.rename(out_dir / f"frames_bak_{int(time.time())}")
+        fdir.mkdir(exist_ok=True)
+        for i, fr in enumerate(frames):
+            fr.save(fdir / f"{name}_{i:04d}.png")
+    else:
+        # never leave a stale frames/ behind
+        fdir = out_dir / "frames"
+        if fdir.exists():
+            fdir.rename(out_dir / f"frames_bak_{int(time.time())}")
 
     return atlas_path
 
@@ -119,6 +169,12 @@ def main():
     ap.add_argument("--cell", type=int, default=256, help="cell size in px (each frame resized to cell×cell)")
     ap.add_argument("--no-keep-ends", action="store_true", help="do not force first/last frame preservation")
     ap.add_argument("--defringe-green", action="store_true", help="knock out leftover green-screen fringe")
+    ap.add_argument("--key-black", action="store_true",
+                    help="make near-black background transparent (border-connected flood fill)")
+    ap.add_argument("--no-frames", action="store_true",
+                    help="do not emit the resized frames/ subfolder (atlas + .atlas only)")
+    ap.add_argument("--no-preview", action="store_true",
+                    help="do not emit the preview_<name>.png grid sheet")
     args = ap.parse_args()
 
     src = Path(args.src)
@@ -127,6 +183,10 @@ def main():
     name = args.name or src.name
 
     srcs = load_ordered(src)
+    # Re-run safety: when --out == --src, a previously generated atlas PNG/atlas
+    # would otherwise be globbed as a "frame". Ignore any file whose stem matches
+    # the output base name so only true source frames are packed.
+    srcs = [s for s in srcs if s.stem != name]
     N = len(srcs)
     idx = sample_indexes(N, args.grid, keep_ends=not args.no_keep_ends)
     assert len(idx) == args.grid * args.grid
@@ -136,17 +196,24 @@ def main():
     frames = []
     for k in idx:
         im = Image.open(srcs[k]).convert("RGBA")
-        if args.defringe_green:
+        if args.key_black:
+            im = key_black_bg(im)
+        elif args.defringe_green:
             im = defringe_green(im)
         im = im.resize((args.cell, args.cell), Image.Resampling.LANCZOS)
         frames.append(im)
 
-    atlas_path = build_atlas(name, frames, out_dir, args.grid, args.cell)
-    pv = build_preview(name, frames, out_dir, args.grid)
+    atlas_path = build_atlas(name, frames, out_dir, args.grid, args.cell,
+                             make_frames=not args.no_frames,
+                             make_preview=not args.no_preview)
 
     a = np.array(Image.open(atlas_path).convert("RGBA"))
+    tail = ""
+    if not args.no_preview:
+        pv = build_preview(name, frames, out_dir, args.grid)
+        tail = f" preview={pv.name}"
     print(f"atlas={atlas_path} {a.shape[1]}x{a.shape[0]} corner_alpha={int(a[0, 0, 3])} "
-          f"frames={len(frames)} preview={pv.name}")
+          f"frames={len(frames)}{tail}")
 
 
 if __name__ == "__main__":

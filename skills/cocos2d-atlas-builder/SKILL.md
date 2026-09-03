@@ -40,6 +40,7 @@ python scripts/build_atlas.py \
   --cell 256 \          # each frame resized to 256×256
   --defringe-green      # optional: knock out leftover green-screen fringe
   --key-black           # optional: make near-black background transparent (border flood fill)
+  --content-max 195 \   # optional: fit content so longest side == 195 px, centered in 256 cell
   --no-frames           # optional: skip the frames/ subfolder (atlas + .atlas only)
   --no-preview          # optional: skip the preview_<name>.png grid sheet
 ```
@@ -65,6 +66,11 @@ Behavior notes:
 - `--key-black` makes a near-black (RGB `< 40`) background transparent via a
   border-connected flood fill, so genuinely dark parts of the subject stay opaque.
   Use it for sprites shot on a solid black backdrop.
+- `--content-max N` crops each frame to its alpha bounding box, scales it so the
+  longest side equals `N` px, and pastes it centered inside the `cell×cell` slot.
+  Use it when sprites from different sources end up different visual sizes in the
+  atlas (e.g. one set was drawn closer to the camera). Pick `N` by measuring the
+  content bounding boxes of the reference atlas you want to match.
 - `--src` and `--out` may be the same folder. A pre-existing atlas PNG/atlas with
   the same `--name` is ignored on re-runs (re-run safe).
 - Atlas background is fully transparent (RGBA alpha = 0).

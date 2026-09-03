@@ -76,6 +76,31 @@ def key_black_bg(im: Image.Image, thr: int = 40) -> Image.Image:
     return Image.fromarray(a, "RGBA")
 
 
+def fit_content_to_cell(im: Image.Image, cell: int, content_max: int, alpha_thr: int = 32) -> Image.Image:
+    """Scale the sprite content so its longest side == content_max and paste it
+    centered in a transparent cell×cell canvas.
+
+    This makes sprites from different sources occupy the same visual proportion
+    inside the atlas cell, even if their original canvas sizes or framing differ.
+    """
+    a = np.array(im.convert("RGBA"))
+    ys, xs = np.where(a[:, :, 3] > alpha_thr)
+    if len(xs) == 0:
+        return Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+    x1, x2 = xs.min(), xs.max()
+    y1, y2 = ys.min(), ys.max()
+    cropped = Image.fromarray(a[y1:y2 + 1, x1:x2 + 1], "RGBA")
+    cw, ch = cropped.size
+    scale = content_max / max(cw, ch)
+    new_w, new_h = int(round(cw * scale)), int(round(ch * scale))
+    scaled = cropped.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+    ox = (cell - new_w) // 2
+    oy = (cell - new_h) // 2
+    canvas.paste(scaled, (ox, oy), scaled)
+    return canvas
+
+
 def sample_indexes(N, grid, keep_ends=True):
     """Pick grid*grid frame indices in playback order.
     keep_ends forces first frame=0 and last frame=N-1.
@@ -175,6 +200,9 @@ def main():
                     help="do not emit the resized frames/ subfolder (atlas + .atlas only)")
     ap.add_argument("--no-preview", action="store_true",
                     help="do not emit the preview_<name>.png grid sheet")
+    ap.add_argument("--content-max", type=int, default=None,
+                    help="fit sprite content so its longest side == N px, then center it in the cell. "
+                         "Use this when sprites from different sources look different sizes in the atlas.")
     args = ap.parse_args()
 
     src = Path(args.src)
@@ -200,7 +228,10 @@ def main():
             im = key_black_bg(im)
         elif args.defringe_green:
             im = defringe_green(im)
-        im = im.resize((args.cell, args.cell), Image.Resampling.LANCZOS)
+        if args.content_max:
+            im = fit_content_to_cell(im, args.cell, args.content_max)
+        else:
+            im = im.resize((args.cell, args.cell), Image.Resampling.LANCZOS)
         frames.append(im)
 
     atlas_path = build_atlas(name, frames, out_dir, args.grid, args.cell,

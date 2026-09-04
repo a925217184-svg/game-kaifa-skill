@@ -33,6 +33,12 @@
 - plist 模板要点（实测可导入 Cocos Creator）：DOCTYPE `-//Apple Computer//DTD PLIST 1.0//EN`、`format=2`、`pixelFormat=RGBA8888`、`premultiplyAlpha`、2 空格缩进、rect 字符串无空格（`{{0,0},{256,256}}`）。详见 `skills/cocos2d-atlas-builder/references/cocos2d_plist_spec.md`。
 - 含脚本 `build_atlas.py` / `gen_plist.py` / `make_preview_gif.py` 与 `tests/test_cocos2d_atlas_builder.py`。
 
+### 5. `ps-batch-png8-usm-export`（PNG 图集批量 USM 锐化 + 8 位压缩，新增）
+- 新增纯本地技能（依赖 Photoshop MCP `@alisaitteke/photoshop-mcp`，无生图后端）：把指定文件夹的 PNG（如 `*_atlas_4x4.png`）逐一在 Photoshop 中打开，应用 Unsharp Mask 锐化，再用 Save-for-Web **PNG-8（较小文件 / 8 位）** 重新导出，保留透明，显著缩小游戏图集体积。
+- 实现要点：MCP 的 `photoshop_export_as` 未暴露「较小文件（8位）」勾选项，故改用 `photoshop_execute_script` 走 ExtendScript `ExportOptionsSaveForWeb`（PNG8=true、transparency=true）。默认 USM 参数 amount=100 / radius=1.0 / threshold=0，可按需调整。
+- 实测：18 张 `_atlas_4x4` 图集 16.45 MB → 5.04 MB（节省 ~69%）。
+- 单文件 `SKILL.md` 即工作流说明，无附带脚本。
+
 ### 费用告知示例
 > 📸 **即将生图** | 后端: **Lovart** (mode: **fast**, 扣信用点) | 内容: [一句话描述] | 预计: ~N 次生成
 
@@ -197,6 +203,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata | Codex / Grok |
 | [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image2video`/`frames2video` → 抽帧 → 品红/绿幕抠图（暖色自动绿幕） → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | 即梦 Dreamina CLI |
 | [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明帧 → 方形图集 + 标准 Cocos2d plist**：N×N 网格打包（4×4=16 / 8×8=64）→ `.atlas` → 严格对齐 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，无空格 rect） | 方形透明图集 PNG、`.atlas`、逐帧 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（纯本地，无生图后端） |
+| [`ps-batch-png8-usm-export`](./skills/ps-batch-png8-usm-export) | **PNG 图集批量压缩**：逐张 Photoshop 打开 → USM 锐化 → 8 位 PNG（PNG-8 / 较小文件）重导出，保留透明 | 压缩后的 PNG（目录结构镜像原图） | Photoshop MCP（`@alisaitteke/photoshop-mcp`，纯本地） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 

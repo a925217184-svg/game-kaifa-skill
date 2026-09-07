@@ -38,8 +38,9 @@ This skill automates a common game-asset optimization workflow: take a folder of
 
 - Source folder and file pattern.
 - Output folder (default: `<source>/exported_8bit` with mirrored subfolders).
-- USM settings: default is `amount=100`, `radius=1.0px`, `threshold=0`. Adjust if the user asks for more/less sharpening.
-- **Resize scale (optional)**: default `1.0` (no resize). If the user asks to "shrink to 50%" / "缩小到50%", set `0.5`. Apply resize BEFORE USM, then export. Order matters: `doc.resizeImage(newW, newH, 72, ResampleMethod.BICUBICSHARPER)` → `applyUnSharpMask(...)` → PNG-8 export. Resizing first then sharpening compensates the blur introduced by downscaling.
+- **Match the user's workflow**: ask whether they want the previous "USM then PNG-8" workflow, or the Photoshop "导出为 / Export As" dialog workflow (screenshot: scale 50%, format PNG, check "较小文件 (8位)").
+- USM settings (only for the USM variant): default is `amount=100`, `radius=1.0px`, `threshold=0`.
+- **Resize scale (optional)**: default `1.0` (no resize). If the user asks to "shrink to 50%" / "缩小到50%", set `0.5`. For the **Export-As-screenshot variant** use `ResampleMethod.BICUBIC` (matches the dialog's "两次立方") and **skip USM**. For the older downscale-then-sharpen variant, use `ResampleMethod.BICUBICSHARPER` and apply USM after resize.
 - Whether to overwrite existing output files (current behavior: yes, because export overwrites).
 
 ## Known constraints
@@ -91,9 +92,28 @@ This skill automates a common game-asset optimization workflow: take a folder of
 })();
 ```
 
-### Resize variant (shrink before export)
+### Resize variants
 
-When the user wants the output also downscaled (e.g. "缩小到 50%"), inside the `try` block resize first, then sharpen, then export. Use `BICUBICSHARPER` for downscale + follow-up sharpen:
+When the user wants the output also downscaled (e.g. "缩小到 50%"), inside the `try` block resize first, then (optionally) sharpen, then export.
+
+**A. Match Photoshop "导出为" dialog (user screenshot)** — scale 50%, format PNG, "较小文件 (8位)", no USM, "重新取样：两次立方":
+
+```jsx
+      var doc = app.open(srcFile);
+      var srcW = doc.width.as('px'), srcH = doc.height.as('px');
+      var newW = Math.round(srcW * 0.5), newH = Math.round(srcH * 0.5);
+      // ExtendScript cannot set the Export As dialog scale directly, so use resizeImage with BICUBIC
+      doc.resizeImage(UnitValue(newW, 'px'), UnitValue(newH, 'px'), null, ResampleMethod.BICUBIC);
+      // NO USM — the dialog screenshot does not include sharpening
+      var opts = new ExportOptionsSaveForWeb();
+      opts.format = SaveDocumentType.PNG;
+      opts.PNG8 = true;   // "较小文件 (8位)"
+      opts.transparency = true;
+      opts.interlaced = false;
+      doc.exportDocument(outFile, ExportType.SAVEFORWEB, opts);
+```
+
+**B. Downscale-then-sharpen variant** — use `BICUBICSHARPER` and apply USM after resize to compensate downscale blur:
 
 ```jsx
       var doc = app.open(srcFile);
@@ -104,4 +124,4 @@ When the user wants the output also downscaled (e.g. "缩小到 50%"), inside th
       // ... then exportDocument with PNG8 opts as above
 ```
 
-Log `srcW/srcH/outW/outH` too so you can verify the scale took effect. Always resize BEFORE USM so the sharpen compensates the blur from downscaling.
+Log `srcW/srcH/outW/outH` too so you can verify the scale took effect. If the user explicitly shows a screenshot of the "导出为" dialog, prefer **variant A**.

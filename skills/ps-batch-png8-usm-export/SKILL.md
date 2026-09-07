@@ -90,3 +90,18 @@ This skill automates a common game-asset optimization workflow: take a folder of
   return 'done';
 })();
 ```
+
+### Resize variant (shrink before export)
+
+When the user wants the output also downscaled (e.g. "缩小到 50%"), inside the `try` block resize first, then sharpen, then export. Use `BICUBICSHARPER` for downscale + follow-up sharpen:
+
+```jsx
+      var doc = app.open(srcFile);
+      var srcW = doc.width.as('px'), srcH = doc.height.as('px');
+      var newW = Math.round(srcW * 0.5), newH = Math.round(srcH * 0.5);
+      doc.resizeImage(UnitValue(newW, 'px'), UnitValue(newH, 'px'), 72, ResampleMethod.BICUBICSHARPER);
+      doc.activeLayer.applyUnSharpMask(100, 1.0, 0);
+      // ... then exportDocument with PNG8 opts as above
+```
+
+Log `srcW/srcH/outW/outH` too so you can verify the scale took effect. Always resize BEFORE USM so the sharpen compensates the blur from downscaling.

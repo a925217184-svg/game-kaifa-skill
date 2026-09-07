@@ -39,6 +39,7 @@ This skill automates a common game-asset optimization workflow: take a folder of
 - Source folder and file pattern.
 - Output folder (default: `<source>/exported_8bit` with mirrored subfolders).
 - USM settings: default is `amount=100`, `radius=1.0px`, `threshold=0`. Adjust if the user asks for more/less sharpening.
+- **Resize scale (optional)**: default `1.0` (no resize). If the user asks to "shrink to 50%" / "缩小到50%", set `0.5`. Apply resize BEFORE USM, then export. Order matters: `doc.resizeImage(newW, newH, 72, ResampleMethod.BICUBICSHARPER)` → `applyUnSharpMask(...)` → PNG-8 export. Resizing first then sharpening compensates the blur introduced by downscaling.
 - Whether to overwrite existing output files (current behavior: yes, because export overwrites).
 
 ## Known constraints

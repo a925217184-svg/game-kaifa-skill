@@ -55,3 +55,48 @@ Cocos 用正则提取 `{{x,y},{w,h}}`。**任何空格都会让正则失败**：
 2. 错误的 DOCTYPE / `format=3` / `premultipliedAlpha` → 导入失败。
 3. 修改后严格对齐 FTP 模板（format=2, RGBA8888, premultiplyAlpha, 2 空格缩进,
    无空格 rect），Cocos 正常加载。
+
+## TexturePacker `cocos2d` 导出格式（format=3，工具生成）
+
+走 TexturePacker CLI（`--format cocos2d`，见 SKILL.md 的 Workflow B）生成的 plist
+与手动 `gen_plist.py`（format=2）**结构不同**，但 Cocos Creator 都能导入。
+**不要把它"修"成 format=2**——TexturePacker 的 format=3 是它的标准输出。
+
+### 帧字段结构（用 `textureRect` 而非 `frame`）
+
+```
+<key>frames</key>
+<dict>
+  <key>name_00</key>
+  <dict>
+    <key>aliases</key>        <array/>
+    <key>spriteOffset</key>   <string>{0,0}</string>
+    <key>spriteSize</key>     <string>{240,240}</string>
+    <key>spriteSourceSize</key> <string>{240,240}</string>
+    <key>textureRect</key>    <string>{{6,6},{240,240}}</string>
+    <key>textureRotated</key> <false/>
+  </dict>
+  ...
+</dict>
+<key>metadata</key>
+<dict>
+  <key>format</key>            <integer>3</integer>
+  <key>pixelFormat</key>      <string>RGBA8888</string>
+  <key>premultiplyAlpha</key>  <false/>
+  <key>size</key>             <string>{1024,1024}</string>
+  ...
+</dict>
+```
+
+### 解析时的坑（已踩过）
+- 读每帧矩形要用 **`textureRect`**，不是 `frame`；旋转标志用 **`textureRotated`**，
+  不是 `rotated`。手动 `gen_plist.py` 用的是 `frame`/`rotated`，两套 plist 字段名不同，
+  切换解析器时务必对齐。
+- `textureRect` 同样是 `{{x,y},{w,h}}`，但原点是**左上**（Cocos y-down），无需做
+  y-up 翻转（与手动 `gen_plist.py` 在行优先网格里需要 `y=(H-cell)-r*cell` 的处理相反，
+  因为那是手动写入的约定，TP 已经按 Coco s坐标系写好了）。
+- `spriteSize` / `spriteSourceSize` 都是 `{w,h}`（注意是花括号，不是 rect 的 `{{}}`）。
+- 网格布局：用 `--algorithm Grid` + `--shape-padding 4` + `--border-padding 4` +
+  `--extrude 2` 时，相邻帧之间会有 ≥8px 透明 gutter，相邻帧矩形互不重叠，可直接按
+  `textureRect` 切片，绝不会切到邻帧。
+- 若需逐帧按数字排序播放，key 形如 `name_00..name_15`，按末尾两位数字排序即可。

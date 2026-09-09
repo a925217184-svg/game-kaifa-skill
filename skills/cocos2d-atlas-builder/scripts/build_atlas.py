@@ -101,6 +101,32 @@ def fit_content_to_cell(im: Image.Image, cell: int, content_max: int, alpha_thr:
     return canvas
 
 
+def fit_content_to_cell_by_height(im: Image.Image, cell: int, content_height: int, alpha_thr: int = 32) -> Image.Image:
+    """Scale the sprite content so its height == content_height and paste it
+    centered in a transparent cell×cell canvas.
+
+    Use this when every frame in the atlas should look the same visual height,
+    e.g. when the source animation has large size jumps between poses (sleep vs
+    stand) and you want to normalize the perceived size.
+    """
+    a = np.array(im.convert("RGBA"))
+    ys, xs = np.where(a[:, :, 3] > alpha_thr)
+    if len(xs) == 0:
+        return Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+    x1, x2 = xs.min(), xs.max()
+    y1, y2 = ys.min(), ys.max()
+    cropped = Image.fromarray(a[y1:y2 + 1, x1:x2 + 1], "RGBA")
+    cw, ch = cropped.size
+    scale = content_height / ch
+    new_w, new_h = int(round(cw * scale)), int(round(ch * scale))
+    scaled = cropped.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+    ox = (cell - new_w) // 2
+    oy = (cell - new_h) // 2
+    canvas.paste(scaled, (ox, oy), scaled)
+    return canvas
+
+
 def sample_indexes(N, grid, keep_ends=True):
     """Pick grid*grid frame indices in playback order.
     keep_ends forces first frame=0 and last frame=N-1.
@@ -203,6 +229,10 @@ def main():
     ap.add_argument("--content-max", type=int, default=None,
                     help="fit sprite content so its longest side == N px, then center it in the cell. "
                          "Use this when sprites from different sources look different sizes in the atlas.")
+    ap.add_argument("--content-height", type=int, default=None,
+                    help="fit sprite content so its height == N px, then center it in the cell. "
+                         "Use this when frames in the same atlas have different visual heights "
+                         "(e.g. sleep vs stand) and you want them to look the same size.")
     args = ap.parse_args()
 
     src = Path(args.src)
@@ -221,6 +251,9 @@ def main():
     if not args.no_keep_ends:
         assert idx[0] == 0 and idx[-1] == N - 1, "首/尾帧未保留"
 
+    if args.content_max and args.content_height:
+        raise SystemExit("--content-max and --content-height are mutually exclusive; use one.")
+
     frames = []
     for k in idx:
         im = Image.open(srcs[k]).convert("RGBA")
@@ -230,6 +263,8 @@ def main():
             im = defringe_green(im)
         if args.content_max:
             im = fit_content_to_cell(im, args.cell, args.content_max)
+        elif args.content_height:
+            im = fit_content_to_cell_by_height(im, args.cell, args.content_height)
         else:
             im = im.resize((args.cell, args.cell), Image.Resampling.LANCZOS)
         frames.append(im)

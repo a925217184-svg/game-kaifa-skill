@@ -39,6 +39,14 @@
 - 实测：18 张 `_atlas_4x4` 图集 16.45 MB → 5.04 MB（节省 ~69%）。
 - 单文件 `SKILL.md` 即工作流说明，无附带脚本。
 
+### 6. `html-game-to-cocos`（HTML 游戏 → Cocos 可视化可替换工程流水线，新增）
+- 新增纯方法论技能（单文件 `SKILL.md`，无脚本依赖）：把**单文件 HTML/Canvas2D 游戏**移植为 **Cocos Creator 工程**，核心产出不是"能跑就行"，而是**编辑器里全部元素可视化、素材即拖即换**的可编辑工程。
+- **六步流水线**：① 矢量忠实移植（Canvas 语义包装器保 H5 坐标系，逐函数对应，参数全 `@property` 曝出）→ ② MCP 节点实体化（运行时黑盒 → 编辑器真实节点）→ ③ MCP 批量建 Sprite 槽位（拖图即替换、无图矢量兜底）→ ④ 动态元素实体化（网格真源节点 / 角色实体 / SpriteAtlas 序列帧）→ ⑤ 迭代调试闭环 → ⑥ 清理 + GUIDE.md 交付。
+- **核心机制 Sprite 槽位**：每个界面元素一个约定命名槽位节点（`bg-wall` / `hud-counter-bg` / `button-start`…），Renderer 每帧检查槽位——拖了 PNG 显示图、没拖自动回退代码矢量绘制；换素材零改代码。
+- **MCP 全流程驱动**：基于 funplay-cocos-mcp 的 `execute_javascript`，内含双上下文决策表（editor / scene）、一次性批量脚本模式（顶层 return + save-scene）、10 条实战硬约束（装饰器导入、sizeMode、帧序、事件不序列化、@property 数组内联覆盖等）。
+- **跨 Agent 通用**：文档为纯 Markdown，任何能连 MCP 的 Agent（WorkBuddy / Trae / Cursor / Claude Code）均可执行；调用方式见仓库内 SKILL.md 开头说明。
+- 实战验证：猫猫村 playable ad 项目全流程（HTML 895 行单文件 → 17 个 TS 文件 + 40+ 可替换槽位 + 序列帧图集系统）。
+
 ### 费用告知示例
 > 📸 **即将生图** | 后端: **Lovart** (mode: **fast**, 扣信用点) | 内容: [一句话描述] | 预计: ~N 次生成
 

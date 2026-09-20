@@ -47,6 +47,15 @@
 - **跨 Agent 通用**：文档为纯 Markdown，任何能连 MCP 的 Agent（WorkBuddy / Trae / Cursor / Claude Code）均可执行；调用方式见仓库内 SKILL.md 开头说明。
 - 实战验证：猫猫村 playable ad 项目全流程（HTML 895 行单文件 → 17 个 TS 文件 + 40+ 可替换槽位 + 序列帧图集系统）。
 
+### 7. `seedance-storyboard-prompt`（分镜脚本 → Seedance 提示词流水线，新增）
+
+- 新增纯方法论 + 本地词典技能（单文件 `SKILL.md` 驱动，检索脚本只依赖 Python 标准库，无生图后端）：把**一句话想法 / 粗略剧本**补全为 **Seedance 2.0 可直接跑的分镜提示词**。
+- **三阶段不跳步**：阶段零「想法优化」（查库给 2–3 个候选 + 推荐理由 + 改写前后对照，等拍板）→ 阶段一完整分镜脚本（等确认）→ 阶段二拼装提示词。不浪费生成额度。
+- **内置 424 条电影技巧库**（抓自 [melies.co](https://melies.co/cinematic-techniques)，13 类：镜头运动 / 灯光 / 构图 / 角度 / 光学 / 色彩 / 时间 / 特效 / 剪辑 / 氛围 / 类型 / 病毒风格），每条含定义、叙事功能、怎么拍、何时用不用、片中实例、**Prompt 模板**、常见错误。写镜头语言前先查库，不凭感觉造词。
+- **内置「意图 → 技巧」映射表**：把"压迫感""燃""反转要狠""夜戏火光"这类感觉词翻译成具体词条；配 `scripts/search.py` 检索工具，支持中文意图词 / 英文关键词 / 分类过滤 / 精确取全文。
+- **内置 31 条三行式表情词条**（眼部 + 嘴角 + 面部），配情绪递进链（嘲讽冷怒 → 轻柔错愕 → 极致震惊 → 慌张惊恐 → 麻木绝望）。**双写规则**：脚本里写「表情【词条名】」简称，拼进提示词时**必须展开成具体描述**——模型不认词条名。
+- 交付格式为**整段可复制**的 Shot 块（风格 / 镜头 / 拍摄内容 / 同期声 / 时长），风格与负面约束内联，参考图清单挪到文末，用户不拼接。
+
 ### 费用告知示例
 > 📸 **即将生图** | 后端: **Lovart** (mode: **fast**, 扣信用点) | 内容: [一句话描述] | 预计: ~N 次生成
 
@@ -212,6 +221,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image2video`/`frames2video` → 抽帧 → 品红/绿幕抠图（暖色自动绿幕） → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | 即梦 Dreamina CLI |
 | [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明帧 → 方形图集 + 标准 Cocos2d plist**：N×N 网格打包（4×4=16 / 8×8=64）→ `.atlas` → 严格对齐 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，无空格 rect） | 方形透明图集 PNG、`.atlas`、逐帧 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（纯本地，无生图后端） |
 | [`ps-batch-png8-usm-export`](./skills/ps-batch-png8-usm-export) | **PNG 图集批量压缩**：逐张 Photoshop 打开 → USM 锐化 → 8 位 PNG（PNG-8 / 较小文件）重导出，保留透明 | 压缩后的 PNG（目录结构镜像原图） | Photoshop MCP（`@alisaitteke/photoshop-mcp`，纯本地） |
+| [`seedance-storyboard-prompt`](./skills/seedance-storyboard-prompt) | **分镜脚本 → Seedance 提示词流水线**：想法优化提案 → 完整分镜脚本 → 可复制提示词；内置 424 条电影技巧库 + 31 条表情词条 + 意图映射表 | 提案表、分镜脚本、整段可复制的 Shot 提示词块 | Python 标准库（纯本地，无生图后端） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 
@@ -277,6 +287,20 @@ Use $generate2dmap to create a Godot-editable RPG map with separated props, enco
 
 ```text
 Use $generate2dmap to create a playable side_scroll_mode platformer stage with parallax layers, stage-reference, separate platform_objects, collision metadata, camera bounds, and a stage-preview.
+```
+
+### Storyboard / Seedance Prompt
+
+```text
+Use $seedance-storyboard-prompt to turn this rough idea into a 40s, 8-shot Seedance storyboard with camera, lighting and expressions filled in.
+```
+
+```text
+Use $seedance-storyboard-prompt to optimize this想法：主角在帐里跟周瑜吹牛说要搞百万支箭，周瑜不信，结果真搞来了。吹牛那段要拽，打脸那段要爽。
+```
+
+```text
+Use $seedance-storyboard-prompt to pick the right camera technique for a betrayal reveal — give me 3 candidates and why.
 ```
 
 ## What You Get

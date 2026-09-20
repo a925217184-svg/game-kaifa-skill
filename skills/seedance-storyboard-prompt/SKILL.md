@@ -21,7 +21,7 @@ sources:
 1. 先读真源规范：`F:\AI视频制作\outputs\Seedance2.0_提示词规范_v1.0.md`（本 skill 只是流程索引，规范是唯一真源）。
 2. **表情优先筛选**：先读 `outputs/人物表情描述库_v1.md`，从 31 条标准词条里挑最贴近的一条引用，**并当场展开为「眼部 + 嘴角 + 面部」三维度描述（全流程双写，脚本与提示词同样处理，禁止只写【词条名】裸奔，详见下方硬规则）**；**严禁自造近义词**；库内无贴合词条才标「表情【自定义：…】（待确认）」并与用户沟通。
 3. **电影技巧优先查库**：`references/cinematic-techniques.md`（或同名 .json）收录 melies.co 全站 **424 条技巧**（13 类：镜头运动 86 / 构图景别 25 / 角度 19 / 灯光 41 / 构图 32 / 镜头光学 17 / 色彩胶片 19 / 时间运动 21 / 机内特效 57 / 剪辑转场 23 / 氛围天气 13 / 类型风格 27 / 病毒风格 44），每条含别名、定义、叙事功能、怎么拍、何时用/不用、近似对比、片中实例、**Prompt 模板**、示例 Prompt、常见错误。**选镜头语言/灯光/构图/风格时先查本库挑词条**，选中的把 Prompt 模板翻译/本地化进 Shot 的「镜头」「光影」字段；库内无贴合再自造，并注明。词条正文为英文原文，直接引用 Prompt 时可整段英文嵌入中文提示词。
-   - **检索方式（二选一）**：① 跑脚本（推荐，输出精简）`python C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\_tools\search.py 压迫感 --n 6`，支持中文意图词/英文关键词/`--cat` 限定分类/`--name "xxx"` 取全文/`--full` 全字段/`--intent` 列意图词；② 直接 Grep `cinematic-techniques.md`。**不要整篇 Read 这个 1.3MB 文件**。
+   - **检索方式（二选一）**：① 跑脚本（推荐，输出精简）`python C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\_tools\search.py 压迫感 --n 6`，支持中文意图词/英文关键词/`--cat` 限定分类/`--name "xxx"` 取全文/`--full` 全字段/`--intent` 列意图词；② 直接 Grep `cinematic-techniques.md`。**不要整篇 Read 这个 1.3MB 文件**。**默认输出已含「避坑」行**（自动抽出该词条的 Do not / 常见错误），引用模板前必看——少数模板段落是反例（如 Low Angle 模板写 "no dramatic upward angle"）。
    - **感觉词 → 专业词条**：先查 `references/intent-to-technique.md`（意图映射表，含情绪/场面/时间/光线/风格五类 + 组合配方），把"压迫感""燃""反转要狠"翻译成具体词条，再用上面的检索脚本取全文。
 
 ## 阶段零 · 想法优化（用户给的是粗略想法/一句话/毛坯脚本时必走）

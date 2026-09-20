@@ -4,12 +4,12 @@ description: 把粗略情节剧本/一句话想法补全为 Seedance 2.0 可直�
 agent_created: true
 version: 1.3
 sources:
-  spec: references/seedance-prompt-spec.md
-  expression_library: references/expression-library.md
-  cinematic_library: references\cinematic-techniques.md
-  cinematic_library_json: references\cinematic-techniques.json
-  intent_map: references\intent-to-technique.md
-  search_tool: references\_tools\search.py
+  spec: F:\AI视频制作\outputs\Seedance2.0_提示词规范_v1.0.md
+  expression_library: F:\AI视频制作\outputs\人物表情描述库_v1.md
+  cinematic_library: C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\cinematic-techniques.md
+  cinematic_library_json: C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\cinematic-techniques.json
+  intent_map: C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\intent-to-technique.md
+  search_tool: C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\_tools\search.py
   library_source: https://melies.co/cinematic-techniques
   prior_work: F:\AI视频制作\outputs\三国吹牛系统_分镜脚本与Seedance提示词_参考图锁定.md
 ---
@@ -18,10 +18,10 @@ sources:
 
 ## 开场必读
 
-1. 先读真源规范：`references/seedance-prompt-spec.md`（本 skill 只是流程索引，规范是唯一真源）。
+1. 先读真源规范：`F:\AI视频制作\outputs\Seedance2.0_提示词规范_v1.0.md`（本 skill 只是流程索引，规范是唯一真源）。
 2. **表情优先筛选**：先读 `outputs/人物表情描述库_v1.md`，从 31 条标准词条里挑最贴近的一条引用，写作「表情【词条名】」；**严禁自造近义词**；库内无贴合词条才标「表情【自定义：…】（待确认）」并与用户沟通。
 3. **电影技巧优先查库**：`references/cinematic-techniques.md`（或同名 .json）收录 melies.co 全站 **424 条技巧**（13 类：镜头运动 86 / 构图景别 25 / 角度 19 / 灯光 41 / 构图 32 / 镜头光学 17 / 色彩胶片 19 / 时间运动 21 / 机内特效 57 / 剪辑转场 23 / 氛围天气 13 / 类型风格 27 / 病毒风格 44），每条含别名、定义、叙事功能、怎么拍、何时用/不用、近似对比、片中实例、**Prompt 模板**、示例 Prompt、常见错误。**选镜头语言/灯光/构图/风格时先查本库挑词条**，选中的把 Prompt 模板翻译/本地化进 Shot 的「镜头」「光影」字段；库内无贴合再自造，并注明。词条正文为英文原文，直接引用 Prompt 时可整段英文嵌入中文提示词。
-   - **检索方式（二选一）**：① 跑脚本（推荐，输出精简）`python references\_tools\search.py 压迫感 --n 6`，支持中文意图词/英文关键词/`--cat` 限定分类/`--name "xxx"` 取全文/`--full` 全字段/`--intent` 列意图词；② 直接 Grep `cinematic-techniques.md`。**不要整篇 Read 这个 1.3MB 文件**。
+   - **检索方式（二选一）**：① 跑脚本（推荐，输出精简）`python C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references\_tools\search.py 压迫感 --n 6`，支持中文意图词/英文关键词/`--cat` 限定分类/`--name "xxx"` 取全文/`--full` 全字段/`--intent` 列意图词；② 直接 Grep `cinematic-techniques.md`。**不要整篇 Read 这个 1.3MB 文件**。
    - **感觉词 → 专业词条**：先查 `references/intent-to-technique.md`（意图映射表，含情绪/场面/时间/光线/风格五类 + 组合配方），把"压迫感""燃""反转要狠"翻译成具体词条，再用上面的检索脚本取全文。
 
 ## 阶段零 · 想法优化（用户给的是粗略想法/一句话/毛坯脚本时必走）
@@ -93,13 +93,13 @@ ffmpeg -hide_banner -nostats -i "路径.mp3" -af silencedetect=noise=-32dB:d=0.1
 
 **阶段二 · 提示词生成（确认后）**
 7. 回填参考图编号，更新锚定表。
-8. 按规范 §4 公式拼装（表情在阶段一已双写，直接复用展开描述），交付时按规范 §9.3 的「整段可复制」格式输出（见下方硬规则）。
+8. 按规范 §4 公式拼装（表情在阶段一已双写，直接复用展开描述），**每个 Shot 前带实例化的「全局锁段」**（风格四要素 + 资产锚定声明句，见规范 §9.3），全局锁 + Shot 正文连成一体可复制（见下方硬规则）。
 9. 同期声 + 全局约束校验，输出。
 
 ## 硬规则（踩过坑的）
 
 - **【表情全流程双写，禁止【词条名】裸奔】所有交付物（阶段一分镜脚本、阶段二提示词）里，表情一律写「词条名 + 展开描述」**：`表情【极致震惊】——双眼骤然睁大瞪圆、瞳孔收缩、眉头高挑上扬；嘴唇微张、嘴角向两侧平拉发僵、下颌微垂；额肌收紧、面部肌肉僵住、血色略褪`。展开保留「眼部 + 嘴角 + 面部」三个维度，可压成一句连贯中文但三维度都要在。**任何地方出现孤零零的【词条名】都算违规**——模型不认词条名，用户也不该再手动展开一次（2026-09-20 二次纠正：旧规则允许脚本只写简称，导致脚本直接被拿去用时模型读不懂）。
-- **【最高优先级】交付必须是「整段可复制」的 Shot 块**，格式固定为 `Shot NN / 风格： / 镜头： / 拍摄内容： / 同期声： / 时长：`。风格与负面约束**内联进「风格：」字段**；参考图清单、备注、风险提示**一律挪到文件末尾独立小节**，绝不插在 Shot 块里打断复制。用户是整段选中直接粘进生成器的，**不能要求他做任何拼接**（2026-09-17 用户明确纠正）。
+- **【最高优先级】交付 = 「全局锁段 + Shot 正文段」，两段紧挨、一次全选可复制**。全局锁段含：风格串（题材/材质/ cinematic game CG, PBR material texture）+ 基调递进链（→ 连接 ≤5 词）+ 一句话色调 + 光线设计总述 + **资产锚定声明句**（按规范 §2.2 四种模板逐条实例化，参考图未生成写「（图片 N：待补）」）。**锚定句只住全局锁，绝不写进「拍摄内容」正文**；同一批 Shot 共用同一份全局锁、逐 Shot 重复携带（Seedance 每次生成独立）。风格表/锚定表只作查阅，**不能只给表格不给锁**——全局风格块和锚定模板是提示词组成部分，必须实例化成可复制文字（2026-09-20 用户纠正）。参考图清单、备注、风险提示挪到文件末尾独立小节；正文块内禁止插给人看的内容。
 - 机位必须数值化（"摄影机位于 X，离地 N 米"），禁止模糊位置。
 - 5s 一档；超 1 主事件拆 Shot，不硬塞。
 - 系统弹窗文字 = 画面内 UI，写"清晰显示白色文字"+ 文案原文照抄。

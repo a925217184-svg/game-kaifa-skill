@@ -72,6 +72,51 @@ INTENT = {
     '烛光': (['candle', 'candlelight', 'lantern'], ['Candlelight', 'Practical Lighting', 'Chiaroscuro', 'Warm Amber', 'Eye Light']),
     '室内光': (['interior light', 'indoor', 'room light'], ['Window Light', 'Practical Lighting', 'Three-Point Lighting', 'Bounce Light', 'Naturalistic Ambient']),
     '天气': (['weather', 'atmosphere'], ['Fog', 'Rain', 'Snow', 'Mist', 'Smoke', 'Atmospheric Haze', 'Dust Motes', 'Steam', 'Ocean']),
+    '火把': (['torch', 'firelight', 'flame'], ['Practical Lighting', 'Sparks and Embers', 'Underlighting', 'Warm Amber', 'Motivated Lighting']),
+    '油灯': (['oil lamp', 'lantern', 'candlelight'], ['Practical Lighting', 'Candlelight', 'Chiaroscuro', 'Warm Amber', 'Eye Light']),
+    '军帐': (['tent interior', 'warm interior', 'lantern'], ['Practical Lighting', 'Candlelight', 'Chiaroscuro', 'Motivated Lighting', 'Eye Light']),
+    '逆光': (['backlight', 'backlit', 'against the light'], ['Backlight', 'Silhouette', 'Lens Flare', 'Halation', 'Rim Light', 'Golden Hour']),
+    '剪影': (['silhouette', 'dark shape', 'rim'], ['Silhouette', 'Backlight', 'Rim Light', 'Cameo Lighting', 'Low-Key Lighting']),
+    '轮廓光': (['rim light', 'edge light', 'kicker'], ['Rim Light', 'Backlight', 'Three-Point Lighting', 'Cameo Lighting']),
+    '顶光': (['top light', 'overhead light'], ['Top Light', 'Chiaroscuro', 'Rembrandt Lighting', 'Hard Light']),
+    '底光': (['underlighting', 'light from below'], ['Underlighting', 'Horror', 'Chiaroscuro', 'Eerie']),
+    '眼神光': (['catchlight', 'eye light'], ['Eye Light', 'Close-Up (CU)', 'Three-Point Lighting', 'Soft Light']),
+    '体积光': (['volumetric', 'god rays', 'light beam'], ['Volumetric Light', 'Atmospheric Haze', 'Dust Motes', 'Fog', 'Steam']),
+    '丁达尔': (['tyndall', 'god rays', 'light shaft'], ['Volumetric Light', 'Dust Motes', 'Fog', 'Window Light']),
+    '雾': (['fog', 'mist', 'haze'], ['Fog', 'Mist', 'Atmospheric Haze', 'Volumetric Light', 'Silhouette']),
+    '雨': (['rain', 'wet', 'storm'], ['Rain', 'Storm', 'Cool Blue', 'Desaturation', 'Slow Motion']),
+    '雪': (['snow', 'winter', 'cold'], ['Snow', 'Cool Blue', 'High-Key Lighting', 'Desaturation']),
+    '沙尘': (['dust', 'sand', 'particle'], ['Dust and Sand', 'Dust Motes', 'Smoke', 'Atmospheric Haze', 'Desaturation']),
+    '冷暖': (['warm cool', 'teal orange', 'color contrast'], ['Teal and Orange', 'Split Toning', 'Cross Lighting', 'Tonal Contrast']),
+    '色调': (['color grade', 'tonal', 'palette'], ['Teal and Orange', 'Split Toning', 'Desaturation', 'Cool Blue', 'Warm Amber']),
+    '俯拍': (['overhead', 'high angle', 'top down', 'aerial'], ['High Angle', 'Aerial', "Bird's-Eye View", 'Crane Over', 'Establishing Shot']),
+    '仰拍': (['low angle', 'looking up', 'worm'], ['Low Angle', "Worm's-Eye View", 'Hero Cam', 'Crane Up']),
+    '特写': (['close up', 'extreme close up', 'detail'], ['Close-Up (CU)', 'Extreme Close-Up (ECU)', 'Insert', 'Shallow Focus', 'Macro']),
+    '跟拍': (['tracking', 'follow', 'steadicam'], ['Tracking Shot', 'Steadicam', 'Parallax', 'Long Take', 'Dolly']),
+    '环绕': (['orbit', 'around', 'arc'], ['Orbit', 'Arc', 'Crane Over', 'Bullet Time', 'Steadicam']),
+    '慢动作': (['slow motion', 'slowmo', 'ramp'], ['Slow Motion', 'Speed Ramp', 'Bullet Time', 'Overcrank']),
+    '定格': (['freeze', 'lock off', 'still'], ['Freeze Frame', 'Static Locked-Off', 'Vignette', 'Symmetry']),
+    '推近': (['push in', 'dolly in', 'zoom in'], ['Push In', 'Dolly In', 'Slow Zoom In', 'Crash Zoom In']),
+    '拉远': (['pull back', 'pull out', 'widen'], ['Pull Back', 'Aerial Pullback', 'Crane Up', 'Wide Shot (WS)']),
+    '横移': (['lateral', 'pan', 'slide', 'truck'], ['Pan', 'Tracking Shot', 'Whip Pan', 'Dolly']),
+    '手持': (['handheld', 'shaky', 'documentary'], ['Handheld', 'Shaky Cam', 'Found Footage', 'Dutch Angle']),
+    '第一人称': (['first person', 'pov', 'subjective'], ['POV', 'FPV Drone', 'Handheld', 'Voyeur', 'Over the Shoulder']),
+    '对峙': (['standoff', 'confrontation', 'face off'], ['Split Screen', 'Short Lighting', 'Cross Lighting', 'Two-Shot', 'Symmetry', 'Telephoto Compression']),
+    '对话': (['dialogue', 'conversation', 'two shot'], ['Two-Shot', 'Over the Shoulder', 'Shot Reverse Shot', 'Shallow Focus']),
+    '群像': (['group', 'ensemble', 'crowd'], ['Wide Shot (WS)', 'Deep Focus', 'Symmetry', 'Blocking', 'Establishing Shot']),
+    '大场面': (['spectacle', 'massive', 'army'], ['Extreme Long Shot (ELS)', 'Aerial', 'Crane Up', 'One-Point Perspective', 'Symmetry']),
+    '弹窗': (['floating ui', 'hud', 'interface'], ['Floating UI', 'Tech Noir', 'Random Glow', 'Blue Depth', 'Hologram']),
+    '暖光': (['warm light', 'warm amber', 'warm interior'], ['Warm Amber', 'Candlelight', 'Practical Lighting', 'Golden Hour', 'Soft Light']),
+    '冷光': (['cool light', 'cool blue', 'cold'], ['Cool Blue', 'Moonlight Gel', 'Blue Hour', 'Low-Key Lighting', 'Night Vision']),
+    '月光': (['moonlight', 'moon', 'night sky'], ['Moonlight Gel', 'Blue Hour', 'Low-Key Lighting', 'Silhouette', 'Day for Night']),
+    '日光': (['daylight', 'sunlight', 'sun'], ['High-Key Lighting', 'Naturalistic Ambient', 'Available Light', 'Golden Hour', 'Bounce Light']),
+    '内景': (['interior', 'indoor', 'inside'], ['Practical Lighting', 'Window Light', 'Three-Point Lighting', 'Motivated Lighting', 'Chiaroscuro']),
+    '外景': (['exterior', 'outdoor', 'outside'], ['Available Light', 'Naturalistic Ambient', 'Golden Hour', 'Blue Hour', 'Establishing Shot']),
+    '火攻': (['fire', 'flame', 'burning', 'blaze'], ['Fire', 'Sparks and Embers', 'Smoke', 'Light Flash', 'Underlighting', 'Chiaroscuro']),
+    '战场': (['battlefield', 'war', 'battle'], ['Long Take', 'Handheld', 'Dust and Sand', 'Smoke', 'Desaturation', 'Wide Shot (WS)']),
+    '城楼': (['castle', 'rampart', 'fortress', 'city wall'], ['Establishing Shot', 'Low Angle', 'Aerial', 'One-Point Perspective', 'Symmetry']),
+    '爆炸火光': (['explosion', 'blast', 'fireball'], ['Light Flash', 'Fire', 'Sparks and Embers', 'Smoke', 'Slow Motion', 'Particles']),
+    '机甲': (['mecha', 'robot', 'armor'], ['Low Angle', "Worm's-Eye View", 'Sparks and Embers', 'Smoke', 'Light Flash', 'Blockbuster Gloss']),
 
     # —— 风格 ——
     '国风': (['chinese', 'oriental', 'wuxia', 'ink'], ['Wuxia', 'Ink Riot', 'Hand Paint', 'Paper', 'Origami', 'Fairytale Castle', 'Golden Ratio', 'Symmetry']),
@@ -183,6 +228,14 @@ def main():
             k, s = INTENT[q]
             kws += k
             seeds += s
+            continue
+        # 子串匹配：查询词里含有某个意图词（如「夜戏火光」含「火光」）或意图词含查询词
+        hit = [key for key in INTENT if (key in q and len(key) >= 2) or (len(q) >= 2 and q in key)]
+        if hit:
+            for key in hit:
+                k, s = INTENT[key]
+                kws += k
+                seeds += s
         else:
             kws.append(q)
             if re.search(r'[\u4e00-\u9fff]', q):

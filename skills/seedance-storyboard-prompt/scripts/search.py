@@ -171,6 +171,15 @@ def score(rec, kws, seeds):
     return s
 
 
+CAVEAT_RE = re.compile(r"(?i)\b(do not|don't|avoid|wrong|never|instead of|cousin|tell is|not the right|the wrong tool)\b")
+
+
+def caveat(r):
+    txt = ' '.join([str(r.get('when_to_use') or ''), str(r.get('mistakes') or '')])
+    parts = [s for s in re.split(r'(?<=[.!?])\s+', txt) if CAVEAT_RE.search(s)]
+    return ' '.join(parts[:2])
+
+
 def show(r, i, full=False):
     print(f"\n[{i}] {r['name']}  ·  {CAT_CN.get(r['category_slug'], r['category_slug'])}")
     print(f"    定义: {(r.get('definition') or '')[:190]}")
@@ -179,6 +188,9 @@ def show(r, i, full=False):
         print(f"    功能: {nar[0][:170]}")
     if r.get('prompt_template'):
         print(f"    模板: {r['prompt_template'][:340]}")
+    cav = caveat(r)
+    if cav:
+        print(f"    避坑: {cav[:210]}")
     if full:
         if len(nar) > 1:
             for n in nar[1:]:

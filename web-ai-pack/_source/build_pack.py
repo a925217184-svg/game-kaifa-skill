@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-把本地真源（规范 / 表情库 / 424 条技巧库 / 意图映射表 / 实战示例）
+把本地真源（规范 / 表情库 / 424 条技巧库 / 意图映射表 / 打斗手册 / 实战示例）
 组装成一份「自包含、可发给豆包 Gemini 等网页 AI」的规范包。
 
-用法：cd web-ai-pack && python _source/build_pack.py
-输出：包根目录下 00_怎么用.md / 01_开场指令.txt / 02_网页AI规范_完整自包含版.md / 02b_网页AI规范_轻量版.md / 03_技巧库_全量424条.md
-仓库版路径全部相对仓库根，clone 下来即可原地重跑。
+用法：python build_pack.py
+输出：包根目录下 00_怎么用.md / 01_开场指令.txt / 02_网页AI规范_完整自包含版.md /
+     02b_网页AI规范_轻量版.md / 03_技巧库_全量424条.md / 05_打斗手册.txt
 """
 import io, os, json, re, textwrap
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # web-ai-pack/
-REPO = os.path.dirname(ROOT)                                          # 仓库根
-SKILL = os.path.join(REPO, "skills", "seedance-storyboard-prompt")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SKILL = r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt"
+SPEC_DIR = r"F:\AI视频制作\outputs"
 
 SRC_MAIN = os.path.join(ROOT, "_source", "主体模板.md")
-EXPR_LIB = os.path.join(SKILL, "references", "expression-library.md")
+EXPR_LIB = os.path.join(SPEC_DIR, "人物表情描述库_v1.md")
 INTENT_MAP = os.path.join(SKILL, "references", "intent-to-technique.md")
 TECH_JSON = os.path.join(SKILL, "references", "cinematic-techniques.json")
-EXAMPLE = os.path.join(ROOT, "_source", "示例_风云助阵_v2.txt")
+EXAMPLE = os.path.join(SPEC_DIR, "奇迹MU风云助阵_Seedance提示词_v2_9秒5镜_可复制.txt")
+COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")
 
 CAT_CN = {
     "camera-movement": "镜头运动", "camera-angles": "机位角度", "framing": "构图景别",
@@ -98,6 +99,57 @@ def example_note(raw):
             + body + "\n\n> 完整说明区还应有：参考图挂载 / 执行参数 / 口播对齐 / 备注 / 自检清单。")
 
 
+COMBAT_HEAD = """# 05 · 打斗提示词参考手册（网页 AI 自包含版）
+
+> 本文件是《Seedance 分镜提示词规范》的**打斗场景专用补充**，与主文件 `02_网页AI规范_完整自包含版.md` 配套使用。
+
+## 一、什么时候要用它
+
+满足任意一条，就必须读本文件再动笔：
+
+- 剧情里有 打斗 / 战斗 / 交手 / 对决 / 搏杀 / 追杀 / 群战 / 怪物搏杀 / BOSS 战；
+- 用户提了「炫酷打斗 / 强化打击感 / 丰富特效 / 动作不流畅 / 打击没力度 / 节奏拖沓」这类需求词；
+- 提示词里出现 兵器碰撞、能量对轰、变身觉醒后的战斗段落。
+
+## 二、它和主规范怎么配合
+
+| 层面 | 归谁管 |
+|---|---|
+| 全局锁、Shot 字段、两区制、字数上限、表情双写 | **主规范（02）**，一律照它 |
+| 打斗内部的字段顺序、打击反馈、环境破坏、力量分级 | **本手册**，逐镜落 |
+| 单镜的镜头语言 / 灯光词条选型 | 主规范第 5 节的 424 条技巧库 |
+
+冲突时：**打斗场景内以本手册为准，其余一律以主规范为准。**
+
+## 三、执行要求（写给 AI）
+
+1. 逐镜固定字段序：`开局站位状态 → 镜头 → 动作 → 台词 → 情绪 → 特效 → 声音（前景/背景）`，不得跳序；
+2. 每一处打击必须凑齐「接触闪 / 形变 / 位移 follow-through / 反作用力 / 二次破坏」五件，并配一个触点标记词（黑白闪 / 顿帧 / 音爆 / 震屏）；
+3. 环境破坏走四段式：**场景层先预声明可破坏性 → 交手产生破坏 → 跨镜留残留痕迹 → 环境持续运动不停帧**；
+4. 用户提需求词时，按 §5.1 映射表**取模块改字段**，不要重写全篇；
+5. 本手册的所有产出同样受主规范的字数硬限制约束（「全局锁 + 目标 Shot」≤1800 字，硬上限 2000）。
+
+---
+
+"""
+
+
+def build_combat():
+    """把打斗手册真源转成网页 AI 自包含版（剔本地技能引用，加使用说明头）"""
+    t = read(COMBAT)
+    t = t.replace(
+        "> 调用关系：本手册已挂入 `seedance-storyboard-prompt` 技能（`references/combat-handbook.md`）；剧情含",
+        "> 调用关系：本手册是打斗场景的专用补充规范，与主规范配套使用。剧情含")
+    t = t.replace("### §0.5 检索锚点（供 AI / 人工快速定位，可 Grep）",
+                  "### §0.5 检索锚点（按此表直接翻到对应节）")
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    # 正文 H1 降为 H2，避免与文件头 H1 并列；其余原样保留
+    t = t.replace("# 打斗提示词参考手册 v1", "## 手册正文 · 打斗提示词参考手册 v1", 1)
+    out = COMBAT_HEAD + "> 以下为手册正文，编号是两套：上方「一 / 二 / 三」讲怎么用，正文「§0–§5」是规范本体，执行时按 § 号定位。\n\n---\n\n" + t.strip() + "\n"
+    io.open(os.path.join(ROOT, "05_打斗手册.txt"), "w", encoding="utf-8", newline="\n").write(out)
+    print("05_打斗手册.txt", os.path.getsize(os.path.join(ROOT, "05_打斗手册.txt")), "字节")
+
+
 def build():
     tech = json.loads(read(TECH_JSON))
     intent_text = read(INTENT_MAP)
@@ -167,6 +219,8 @@ def build():
         out.append(card(x, i))
         out.append("")
     io.open(os.path.join(ROOT, "03_技巧库_全量424条.md"), "w", encoding="utf-8", newline="\n").write("\n".join(out))
+
+    build_combat()
 
     sizes = {}
     for f in ["02b_网页AI规范_轻量版.md", "02_网页AI规范_完整自包含版.md", "03_技巧库_全量424条.md"]:

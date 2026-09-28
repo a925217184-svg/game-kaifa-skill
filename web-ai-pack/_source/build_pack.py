@@ -18,7 +18,7 @@ SRC_MAIN = os.path.join(ROOT, "_source", "主体模板.md")
 EXPR_LIB = os.path.join(SKILL, "references", "expression-library.md")
 INTENT_MAP = os.path.join(SKILL, "references", "intent-to-technique.md")
 TECH_JSON = os.path.join(SKILL, "references", "cinematic-techniques.json")
-EXAMPLE = os.path.join(ROOT, "_source", "示例_摸蛋反击_v2_9镜15秒.txt")
+EXAMPLE = os.path.join(ROOT, "_source", "示例_摸蛋反击_v3_9镜15秒.txt")
 COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")   # 真源（与 skill 内 combat-handbook.md 同源）
 
 CAT_CN = {

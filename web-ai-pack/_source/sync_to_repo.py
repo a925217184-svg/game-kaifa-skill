@@ -7,7 +7,8 @@
 1. skills/seedance-storyboard-prompt/SKILL.md  （绝对路径 → 仓库相对路径）
 2. skills/seedance-storyboard-prompt/references/seedance-prompt-spec.md（规范真源副本）
 3. skills/seedance-storyboard-prompt/规则卡_v2.txt、references/expression-library.md
-4. web-ai-pack/ 整套刷新，并把其中的 build_pack.py 改成仓库相对路径版（clone 可原地重跑）
+4. skills/seedance-storyboard-prompt/scripts/*.py（_tools 全量：search / count_chars / check_beats / effect_search）
+5. web-ai-pack/ 整套刷新，并把其中的 build_pack.py 改成仓库相对路径版（clone 可原地重跑）
 """
 import io, os, shutil
 
@@ -52,6 +53,20 @@ def sync_skill():
     print("SKILL.md + spec + expr + card -> skills/seedance-storyboard-prompt/")
 
 
+def sync_tools():
+    """references/_tools/*.py → 仓库 scripts/（文件名不变，SKILL 里已按 scripts/ 引用）。"""
+    src = os.path.join(LOCAL_SKILL, "references", "_tools")
+    dst = os.path.join(SKILL_DIR, "scripts")
+    if not os.path.isdir(dst):
+        os.makedirs(dst)
+    n = 0
+    for f in sorted(os.listdir(src)):
+        if f.endswith(".py"):
+            shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
+            n += 1
+    print("scripts/ 刷新：%d 个工具" % n)
+
+
 def sync_pack():
     """web-ai-pack 整套刷新 + build_pack.py 改相对路径。"""
     dst = os.path.join(REPO_ROOT, "web-ai-pack")
@@ -84,5 +99,6 @@ def sync_pack():
 
 if __name__ == "__main__":
     sync_skill()
+    sync_tools()
     sync_pack()
     print("同步完成，接下来：cd %s && git add -A && git commit && git push" % REPO_ROOT)

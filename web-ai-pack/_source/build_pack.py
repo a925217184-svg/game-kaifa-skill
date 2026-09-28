@@ -18,7 +18,7 @@ SRC_MAIN = os.path.join(ROOT, "_source", "主体模板.md")
 EXPR_LIB = os.path.join(SKILL, "references", "expression-library.md")
 INTENT_MAP = os.path.join(SKILL, "references", "intent-to-technique.md")
 TECH_JSON = os.path.join(SKILL, "references", "cinematic-techniques.json")
-EXAMPLE = os.path.join(ROOT, "_source", "示例_风云助阵_v2.txt")
+EXAMPLE = os.path.join(ROOT, "_source", "示例_摸蛋反击_v2_9镜15秒.txt")
 COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")   # 真源（与 skill 内 combat-handbook.md 同源）
 
 CAT_CN = {
@@ -193,14 +193,6 @@ def build():
     ex_note = example_note(raw)
     if ex_note:
         ex = ex + "\n\n---\n\n" + ex_note
-    # 示例早于「节奏」字段生效，补一句说明 + 节拍行样板，避免 AI 照抄旧格式
-    ex = ex + (
-        "\n\n> 注：本示例早于「节奏」字段生效，正文里没有节拍行，是**旧格式**，这部分不要照抄。\n"
-        "> 按本版规范写时，每个 Shot 必须在「拍摄内容」之后、「同期声」之前补一行节拍句，样板：\n"
-        "节奏：0.0-0.6s 静态起幅（人物静止，仅火光与尘埃缓慢浮动）；0.6-2.4s 单一动作（XX 一次完成）；"
-        "2.4-3.0s 收势定格（动作完全停止，画面静止持续到最后一帧，holds still for the final frames）\n"
-    )
-
     # 02b 轻量版：词条卡换成一行式
     lite = (read(SRC_MAIN)
             .replace("<<TECH_CARDS>>", "\n".join(card_lite(x, i + 1) for i, x in enumerate(hot)))

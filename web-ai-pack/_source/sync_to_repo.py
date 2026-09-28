@@ -6,7 +6,7 @@
 同步内容：
 1. skills/seedance-storyboard-prompt/SKILL.md  （绝对路径 → 仓库相对路径）
 2. skills/seedance-storyboard-prompt/references/seedance-prompt-spec.md（规范真源副本）
-3. skills/seedance-storyboard-prompt/规则卡_v1.txt、references/expression-library.md
+3. skills/seedance-storyboard-prompt/规则卡_v2.txt、references/expression-library.md
 4. web-ai-pack/ 整套刷新，并把其中的 build_pack.py 改成仓库相对路径版（clone 可原地重跑）
 """
 import io, os, shutil
@@ -15,7 +15,7 @@ LOCAL_PACK = r"F:\AI视频制作\outputs\网页AI规范包"
 LOCAL_SKILL = r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt"
 LOCAL_SPEC = r"F:\AI视频制作\outputs\Seedance2.0_提示词规范_v1.0.md"
 LOCAL_EXPR = r"F:\AI视频制作\outputs\人物表情描述库_v1.md"
-LOCAL_CARD = r"F:\AI视频制作\outputs\规则卡_v1.txt"
+LOCAL_CARD = r"F:\AI视频制作\outputs\规则卡_v2.txt"
 REPO_ROOT = r"C:\Users\Administrator\WorkBuddy\game-kaifa-skill"
 SKILL_DIR = os.path.join(REPO_ROOT, "skills", "seedance-storyboard-prompt")
 
@@ -39,8 +39,8 @@ def sync_skill():
     t = t.replace("references/_tools/", "scripts/")
     t = t.replace(r"F:\AI视频制作\outputs\Seedance2.0_提示词规范_v1.0.md", "references/seedance-prompt-spec.md")
     t = t.replace(r"F:\AI视频制作\outputs\人物表情描述库_v1.md", "references/expression-library.md")
-    t = t.replace(r"F:\AI视频制作\outputs\规则卡_v1.txt", "规则卡_v1.txt")
-    t = t.replace(r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\规则卡_v1.txt", "规则卡_v1.txt")
+    t = t.replace(r"F:\AI视频制作\outputs\规则卡_v2.txt", "规则卡_v2.txt")
+    t = t.replace(r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\规则卡_v2.txt", "规则卡_v2.txt")
     t = t.replace(r"F:\AI视频制作\outputs\打斗提示词参考手册_v1.md", "references/combat-handbook.md")
     t = t.replace(r"F:\AI视频制作\outputs\网页AI规范包", "web-ai-pack")
     t = t.replace(r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt\references", "references")
@@ -48,7 +48,7 @@ def sync_skill():
 
     write(os.path.join(SKILL_DIR, "references", "seedance-prompt-spec.md"), read(LOCAL_SPEC))
     write(os.path.join(SKILL_DIR, "references", "expression-library.md"), read(LOCAL_EXPR))
-    write(os.path.join(SKILL_DIR, "规则卡_v1.txt"), read(LOCAL_CARD))
+    write(os.path.join(SKILL_DIR, "规则卡_v2.txt"), read(LOCAL_CARD))
     print("SKILL.md + spec + expr + card -> skills/seedance-storyboard-prompt/")
 
 
@@ -71,8 +71,6 @@ def sync_pack():
          'SPEC_DIR = os.path.join(REPO, "web-ai-pack", "_source", "local_only")   # 仓库版不读本机绝对路径'),
         ('EXPR_LIB = os.path.join(SPEC_DIR, "人物表情描述库_v1.md")',
          'EXPR_LIB = os.path.join(SKILL, "references", "expression-library.md")'),
-        ('EXAMPLE = os.path.join(SPEC_DIR, "奇迹MU风云助阵_Seedance提示词_v2_9秒5镜_可复制.txt")',
-         'EXAMPLE = os.path.join(ROOT, "_source", "示例_风云助阵_v2.txt")'),
         ('COMBAT = os.path.join(SPEC_DIR, "打斗提示词参考手册_v1.md")',
          'COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")'),
     ]

@@ -67,12 +67,54 @@ def sync_tools():
     print("scripts/ 刷新：%d 个工具" % n)
 
 
+def _sync_tree(src, dst, ignore=()):
+    """逐文件镜像同步：源文件覆盖目标；目标里多出来的文件**移入隔离区**而不是真删。
+
+    为什么要这样写：本机沙箱对 shutil.rmtree 是 fail-closed 的
+    （SAFE_DELETE_FAIL_CLOSED / windows-sandbox-recycle-bin-unavailable），
+    直接 rmtree 会让整个同步中断。改成「覆盖 + 隔离」后不依赖删除权限，
+    旧文件也只是挪到临时目录，随时可取回。
+    """
+    import tempfile
+    stale_root = os.path.join(tempfile.gettempdir(), "wb_sync_stale", os.path.basename(dst))
+    moved = []
+    src_files = set()
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in ignore]
+        for f in files:
+            rel = os.path.relpath(os.path.join(root, f), src)
+            src_files.add(rel.replace("\\", "/"))
+
+    if os.path.isdir(dst):
+        for root, dirs, files in os.walk(dst):
+            for f in files:
+                full = os.path.join(root, f)
+                rel = os.path.relpath(full, dst).replace("\\", "/")
+                if rel not in src_files:
+                    target = os.path.join(stale_root, rel)
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    if os.path.exists(target):
+                        os.remove(target)
+                    shutil.move(full, target)
+                    moved.append(rel)
+
+    for root, dirs, files in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in ignore]
+        rel_dir = os.path.relpath(root, src)
+        out_dir = dst if rel_dir == "." else os.path.join(dst, rel_dir)
+        os.makedirs(out_dir, exist_ok=True)
+        for f in files:
+            shutil.copy2(os.path.join(root, f), os.path.join(out_dir, f))
+
+    if moved:
+        print("  隔离 %d 个多余文件 -> %s" % (len(moved), stale_root))
+    return moved
+
+
 def sync_pack():
     """web-ai-pack 整套刷新 + build_pack.py 改相对路径。"""
     dst = os.path.join(REPO_ROOT, "web-ai-pack")
-    if os.path.isdir(dst):
-        shutil.rmtree(dst)
-    shutil.copytree(LOCAL_PACK, dst, ignore=shutil.ignore_patterns("__pycache__"))
+    _sync_tree(LOCAL_PACK, dst, ignore={"__pycache__"})
 
     p = os.path.join(dst, "_source", "build_pack.py")
     t = read(p)

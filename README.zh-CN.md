@@ -155,7 +155,10 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata | Codex / Grok |
 | [`video2dsprite`](./skills/video2dsprite) | **视频驱动的更密动作 sprite**：静帧 → `image2video`/`frames2video` → 抽帧 → 品红/绿幕抠图（暖色自动绿幕 + 四角采样鲁棒 key） → 多密度 strip/GIF | video、frames、8/16/24/48 sprites | 即梦 Dreamina CLI |
 | [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明帧 → 方形图集 + 标准 Cocos2d plist**：N×N 网格打包（4×4=16 / 8×8=64）→ `.atlas` → 严格对齐 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，无空格 rect） | 方形透明图集 PNG、`.atlas`、逐帧 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（纯本地，无生图后端） |
+| [`ps-batch-png8-usm-export`](./skills/ps-batch-png8-usm-export) | **PNG 图集批量压缩**：逐张 Photoshop 打开 → USM 锐化 → 8 位 PNG（PNG-8 / 较小文件）重导出，保留透明 | 压缩后的 PNG（目录结构镜像原图） | Photoshop MCP（`@alisaitteke/photoshop-mcp`，纯本地） |
+| [`seedance-storyboard-prompt`](./skills/seedance-storyboard-prompt) | **分镜脚本 → Seedance 提示词流水线**：想法优化提案 → 完整分镜脚本 → 可复制提示词；内置 424 条电影技巧库 + 31 条表情词条 + 意图映射表 + 打斗手册 | 提案表、分镜脚本、整段可复制的 Shot 提示词块 | Python 标准库（纯本地，无生图后端） |
 | [`ai-video-prompt-template`](./skills/ai-video-prompt-template) | **通用 AI 视频分镜骨架**（不绑平台）：设定卡 → 统一 Style → 分镜层（时间码+运镜+画面）→ 统一 NEG；内置打斗场景自动检测（`scripts/detect_combat.py`）与打斗手册（`references/combat-handbook.md`，45KB） | 三层结构提示词、逐镜打斗缺口报告 | Python 标准库（纯本地） |
+| [`html-game-to-cocos`](./skills/html-game-to-cocos) | **单文件 HTML/Canvas2D 游戏 → Cocos Creator 工程**：矢量忠实移植 → MCP 编辑器自动化（节点实体化 / 槽位批量创建 / 场景修改 / 编译诊断）→ Sprite 槽位机制（拖图即替换、无图矢量兜底）→ 动态元素实体化 | Cocos Creator 工程（场景 + 脚本 + 槽位节点）、移植手册 | funplay-cocos-mcp（Cocos Creator 编辑器） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 

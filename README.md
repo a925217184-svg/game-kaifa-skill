@@ -256,6 +256,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`ps-batch-png8-usm-export`](./skills/ps-batch-png8-usm-export) | **PNG 图集批量压缩**：逐张 Photoshop 打开 → USM 锐化 → 8 位 PNG（PNG-8 / 较小文件）重导出，保留透明 | 压缩后的 PNG（目录结构镜像原图） | Photoshop MCP（`@alisaitteke/photoshop-mcp`，纯本地） |
 | [`seedance-storyboard-prompt`](./skills/seedance-storyboard-prompt) | **分镜脚本 → Seedance 提示词流水线**：想法优化提案 → 完整分镜脚本 → 可复制提示词；内置 424 条电影技巧库 + 31 条表情词条 + 意图映射表 | 提案表、分镜脚本、整段可复制的 Shot 提示词块 | Python 标准库（纯本地，无生图后端） |
 | [`ai-video-prompt-template`](./skills/ai-video-prompt-template) | **通用 AI 视频分镜骨架**（不绑平台）：设定卡 → 统一 Style → 分镜层（时间码+运镜+画面）→ 统一 NEG；内置打斗场景自动检测（`scripts/detect_combat.py`）与打斗手册（`references/combat-handbook.md`，45KB） | 三层结构提示词、逐镜打斗缺口报告 | Python 标准库（纯本地） |
+| [`html-game-to-cocos`](./skills/html-game-to-cocos) | **单文件 HTML/Canvas2D 游戏 → Cocos Creator 工程**：矢量忠实移植 → MCP 编辑器自动化（节点实体化 / 槽位批量创建 / 场景修改 / 编译诊断）→ Sprite 槽位机制（拖图即替换、无图矢量兜底）→ 动态元素实体化 | Cocos Creator 工程（场景 + 脚本 + 槽位节点）、移植手册 | funplay-cocos-mcp（Cocos Creator 编辑器） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 

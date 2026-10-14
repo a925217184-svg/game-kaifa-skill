@@ -255,6 +255,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 | [`cocos2d-atlas-builder`](./skills/cocos2d-atlas-builder) | **有序透明帧 → 方形图集 + 标准 Cocos2d plist**：N×N 网格打包（4×4=16 / 8×8=64）→ `.atlas` → 严格对齐 Free Texture Packer 的 `.plist`（format=2、RGBA8888、premultiplyAlpha，无空格 rect） | 方形透明图集 PNG、`.atlas`、逐帧 `frames/`、播放 GIF、`cat_*.plist` | Python + Pillow（纯本地，无生图后端） |
 | [`ps-batch-png8-usm-export`](./skills/ps-batch-png8-usm-export) | **PNG 图集批量压缩**：逐张 Photoshop 打开 → USM 锐化 → 8 位 PNG（PNG-8 / 较小文件）重导出，保留透明 | 压缩后的 PNG（目录结构镜像原图） | Photoshop MCP（`@alisaitteke/photoshop-mcp`，纯本地） |
 | [`seedance-storyboard-prompt`](./skills/seedance-storyboard-prompt) | **分镜脚本 → Seedance 提示词流水线**：想法优化提案 → 完整分镜脚本 → 可复制提示词；内置 424 条电影技巧库 + 31 条表情词条 + 意图映射表 | 提案表、分镜脚本、整段可复制的 Shot 提示词块 | Python 标准库（纯本地，无生图后端） |
+| [`ai-video-prompt-template`](./skills/ai-video-prompt-template) | **通用 AI 视频分镜骨架**（不绑平台）：设定卡 → 统一 Style → 分镜层（时间码+运镜+画面）→ 统一 NEG；内置打斗场景自动检测（`scripts/detect_combat.py`）与打斗手册（`references/combat-handbook.md`，45KB） | 三层结构提示词、逐镜打斗缺口报告 | Python 标准库（纯本地） |
 
 > **`$video2dsprite` 需要即梦 Dreamina CLI**（`image2video` / `frames2video`）。安装到 `~/.workbuddy/skills` 或 `~/.grok/skills`。追求硬像素生产 sheet 仍优先 `$generate2dsprite`。
 

@@ -9,17 +9,16 @@
 """
 import io, os, json, re, textwrap
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # web-ai-pack/
-REPO = os.path.dirname(ROOT)                                          # 仓库根
-SKILL = os.path.join(REPO, "skills", "seedance-storyboard-prompt")
-SPEC_DIR = os.path.join(REPO, "web-ai-pack", "_source", "local_only")   # 仓库版不读本机绝对路径
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SKILL = r"C:\Users\Administrator\.workbuddy\skills\seedance-storyboard-prompt"
+SPEC_DIR = r"F:\AI视频制作\outputs"
 
 SRC_MAIN = os.path.join(ROOT, "_source", "主体模板.md")
-EXPR_LIB = os.path.join(SKILL, "references", "expression-library.md")
+EXPR_LIB = os.path.join(SPEC_DIR, "人物表情描述库_v1.md")
 INTENT_MAP = os.path.join(SKILL, "references", "intent-to-technique.md")
 TECH_JSON = os.path.join(SKILL, "references", "cinematic-techniques.json")
 EXAMPLE = os.path.join(ROOT, "_source", "示例_摸蛋反击_v3.1_9镜15秒.txt")
-COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")   # 真源（与 skill 内 combat-handbook.md 同源）
+COMBAT = os.path.join(SKILL, "references", "combat-handbook.md")
 
 CAT_CN = {
     "camera-movement": "镜头运动", "camera-angles": "机位角度", "framing": "构图景别",
@@ -116,19 +115,20 @@ COMBAT_HEAD = """# 05 · 打斗提示词参考手册（网页 AI 自包含版）
 
 | 层面 | 归谁管 |
 |---|---|
-| 全局锁、Shot 字段、两区制、字数上限、表情双写 | **主规范（02）**，一律照它 |
-| 打斗内部的字段顺序、打击反馈、环境破坏、力量分级 | **本手册**，逐镜落 |
+| 单条整段自然语言的写法、时间线、字数上限、表情与情绪写法 | **主规范（02）**，一律照它 |
+| 打斗内部的备料清单、打击反馈、环境破坏、力量分级 | **本手册**，逐条内部逐项落 |
 | 单镜的镜头语言 / 灯光词条选型 | 主规范第 5 节的 424 条技巧库 |
 
 冲突时：**打斗场景内以本手册为准，其余一律以主规范为准。**
 
 ## 三、执行要求（写给 AI）
 
-1. 逐镜固定字段序：`开局站位状态 → 镜头 → 动作 → 台词 → 情绪 → 特效 → 声音（前景/背景）`，不得跳序；
-2. 每一处打击必须凑齐「接触闪 / 形变 / 位移 follow-through / 反作用力 / 二次破坏」五件，并配一个触点标记词（黑白闪 / 顿帧 / 音爆 / 震屏）；
-3. 环境破坏走四段式：**场景层先预声明可破坏性 → 交手产生破坏 → 跨镜留残留痕迹 → 环境持续运动不停帧**；
-4. 用户提需求词时，按 §5.1 映射表**取模块改字段**，不要重写全篇；
-5. 本手册的所有产出同样受主规范的字数硬限制约束（「全局锁 + 目标 Shot」≤1800 字，硬上限 2000）。
+1. **七项备料，一项都不能跳**：每条内部按「开局站位状态 → 镜头 → 动作 → 台词 → 情绪 → 特效 → 声音（前景/背景）」逐项把料备齐（最常漏的是「声音」和「对手反应」），写完再按这七项倒查一遍；
+2. **输出时必须揉成一整段自然语言**（这是主规范的硬规定）：一条 = 一段，配合时间线 `0-3秒画面：…／3-5秒画面：…`（整数秒、首尾相接、末段止点 = 该条时长），景别运镜 / 动作 / 情绪 / 台词 / 特效全部混写在句子里。**不许输出 `镜头：` `动作：` `特效：` 这类冒号字段标签**，也不许把本手册 §4 的模板骨架（【全局锁】【镜 N】）原样交出来——那是已废止的旧格式，转换三步见 §4.0b；
+3. 每一处打击必须凑齐「接触闪 / 形变 / 位移 follow-through / 反作用力 / 二次破坏」五件，并配一个触点标记词（黑白闪 / 顿帧 / 音爆 / 震屏）；
+4. 环境破坏走四段式：**场景层先预声明可破坏性 → 交手产生破坏 → 跨镜留残留痕迹 → 环境持续运动不停帧**；
+5. 用户提需求词时，按 §5.1 映射表**取模块改对应句子**，不要重写全篇；
+6. 本手册的所有产出同样受主规范的字数硬限制约束（单条 ≤2000 字）。
 
 ---
 
